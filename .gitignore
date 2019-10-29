@@ -1,0 +1,11 @@
+*.bbl
+*.log
+/*.pdf
+*.gz
+*.tex
+cache/**
+example_jss/**
+figure/**
+*.swp
+data/**
+!data/README

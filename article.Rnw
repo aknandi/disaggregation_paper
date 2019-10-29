@@ -1,0 +1,523 @@
+\documentclass[article]{jss}
+
+%% -- LaTeX packages and custom commands ---------------------------------------
+
+%% recommended packages
+\usepackage{thumbpdf,lmodern}
+
+%% another package (only for this demo article)
+\usepackage{framed}
+
+%% new custom commands
+\newcommand{\class}[1]{`\code{#1}'}
+\newcommand{\fct}[1]{\code{#1()}}
+
+
+%
+<<kintroptions, echo=FALSE>>=
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  cache = TRUE,
+  fig.width = 7
+)
+@
+%
+
+
+%% -- Article metainformation (author, title, ...) -----------------------------
+
+%% - \author{} with primary affiliation
+%% - \Plainauthor{} without affiliations
+%% - Separate authors by \And or \AND (in \author) or by comma (in \Plainauthor).
+%% - \AND starts a new line, \And does not.
+\author{Anita K Nandi\\University of Oxford
+   \And Tim CD Lucas\\University of Oxford
+   \And Rohan Arambepola\\University of Oxford
+   \AND Andre Python\\University of Oxford
+   \And Daniel J Weiss\\University of Oxford}
+\Plainauthor{Anita K Nandi, Tim CD Lucas, Rohan Arambepola, Andre Python, Daniel J Weiss}
+
+%% - \title{} in title case
+%% - \Plaintitle{} without LaTeX markup (if any)
+%% - \Shorttitle{} with LaTeX markup (if any), used as running title
+\title{disaggregation: An \proglang{R} package for Bayesian spatial disaggregation modelling}
+\Plaintitle{disaggregation: An R package for Bayesian spatial disaggregation modelling}
+\Shorttitle{disaggregation modelling in \proglang{R}}
+
+%% - \Abstract{} almost as usual
+\Abstract{
+  Disaggregation modelling, or downscaling, has been used across many fields including, epidemiology, ecology and something else. These models use repsonse data agreggated of large heterogenous regions and predict the response at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \emph{disaggregation}, which provides the functionality to streamline the process of running a disaggregation model for fine scale predictions.
+}
+
+%% - \Keywords{} with LaTeX markup, at least one required
+%% - \Plainkeywords{} without LaTeX markup (if necessary)
+%% - Should be comma-separated and in sentence case.
+\Keywords{Bayesian spatial modelling, disaggregation modelling, TMB}
+\Plainkeywords{Bayesian spatial modelling, disaggregation modelling, TMB}
+
+%% - \Address{} of at least one author
+%% - May contain multiple affiliations for each author
+%%   (in extra lines, separated by \emph{and}\\).
+%% - May contain multiple authors for the same affiliation
+%%   (in the same first line, separated by comma).
+\Address{
+  Anita Nandi\\
+  Malaria Atlas Project\\
+  Big Data Institute\\
+  Old Road Campus\\
+  University of Oxford\\
+  Oxford, UK\\
+  E-mail: \email{anita.nandi@bdi.ox.ac.uk}
+}
+
+\begin{document}
+
+
+%% -- Introduction -------------------------------------------------------------
+
+%% - In principle "as usual".
+%% - But should typically have some discussion of both _software_ and _methods_.
+%% - Use \proglang{}, \pkg{}, and \code{} markup throughout the manuscript.
+%% - If such markup is in (sub)section titles, a plain text version has to be
+%%   added as well.
+%% - All software mentioned should be properly \cite-d.
+%% - All abbreviations should be introduced.
+%% - Unless the expansions of abbreviations are proper names (like "Journal
+%%   of Statistical Software" above) they should be in sentence case (like
+%%   "generalized linear models" below).
+
+\section{Introduction} \label{sec:intro}
+
+Methods for estimating high resolution repsonse information from models of aggregated repsonse data over large spatial regions are 
+becoming increasingly sought after in disease risk~\cite{li2012log, diggle2013spatial}, expecially in malaria mapping~\cite{sturrock2014fine, alegana2016advances}, and ecological speices distribution~\cite{keil2013downscaling, barwell2014can}. The aggreagtion of repsonse data over large 
+heterongenous regions is problematic for understanding the fine scale distribution. However, by using fine scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the agreggated area.
+
+Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the repsonse data. Traditional spatial modelling software package, \pkg{INLA}~\cite{rue2009approximate}, has been shown to very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem. Disaggregation models can be implemented in \pkg{TMB} (\cite{tmb2016}) with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models with some level of flexibility.
+
+%% -- Manuscript ---------------------------------------------------------------
+
+%% - In principle "as usual" again.
+%% - When using equations (e.g., {equation}, {eqnarray}, {align}, etc.
+%%   avoid empty lines before and after the equation (which would signal a new
+%%   paragraph.
+%% - When describing longer chunks of code that are _not_ meant for execution
+%%   (e.g., a function synopsis or list of arguments), the environment {Code}
+%%   is recommended. Alternatively, a plain {verbatim} can also be used.
+%%   (For executed code see the next section.)
+
+\section{Disaggregation modelling} \label{sec:model}
+
+Let's say we have response data for $N$ polygons, which corresponds to count data for the property of interest within that polygon, $y_j$. By count data here we mean the data at the level that can be aggregated by simple addition, i.e. the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. The rate, $p_i$ is defined such that the number of cases in a pixel can be calculated by multiplying the rate by the aggregation raster. For example, in epidemiology, we may have as our response the number of people with a certain disease (case incidence). Our rate would be the incidence rate as a fraction of the population, where the aggregation raster corresponds to population. 
+
+For the disaggregation model, we first predict the rate, $pred_i$, at pixel level:
+%
+\begin{equation} \label{eq:lp}
+link(pred_i) = \beta_0 + \beta X + GP(s_i) + u_j
+\end{equation}
+%
+
+where $X$ are the covariates, $GP$ is the gaussian random field and $u_j$ is the polygon-specific iid random effect. The Gaussian random field has a Matern covariance function, with hyperparameters $\rho = \frac{\sqrt{8\lambda}}{\kappa}$, the range of the field (beyond which correlation is $<$ 0.1), and $\sigma$, the marginal standard deviation, relating the magntiude of the variation of the field. Each of the model parameters and hyperparameters are given priors, which is discussed later. 
+
+The pixel predictions are then aggregated to the polygon level using the weighted sum (via the aggregation raster, $agg_i$):
+
+%
+\begin{equation} \label{eq:agreggate1}
+cases_j = \sum_{i \epsilon j} pred_i \times agg_i
+\end{equation}
+\begin{equation} \label{eq:agreggate2}
+rate_j = \frac{\sum_{i \epsilon j} pred_i \times agg_i}{\sum_{i \epsilon j} agg_i}
+\end{equation}
+%
+
+The different likelihoods correspond to slightly different models ($y_j$ is the repsonse count data):
+
+%
+\begin{itemize}
+\item {\textbf{Gaussian} ($\sigma_j$ is the dispersion of the polygon data)
+\begin{equation} \label{eq:gaussian}
+dnorm(y_j/\sum agg_i, rate_j, \sigma_j)
+\end{equation}
+Here $\sigma_j = \sigma \sqrt{\sum agg_i^2} / \sum agg_i$, where  $\sigma$ is the dispersion of the pixel data (a parameter learnt by the model) }
+
+\item \textbf{Binomial} (For a survey in polygon j, $y_j$ is the number positive and $N_j$ is the number tested),
+\begin{equation} \label{eq:binomial}
+dbinom(y_j, N_j, rate_j)
+\end{equation}
+
+\item \textbf{Poisson} (predicts incidence count),
+\begin{equation} \label{eq:poisson}
+dpois(y_j, cases_j)
+\end{equation}
+
+\end{itemize}
+%
+
+Note the normal likelihood is modelled in rate space as it is unreasonable to assume that the dispersion of the likelihood is the same for polygons containing different numbers of cases. Also, the binomial likelihood can be used for survey data, for example when the response data consists of the number of people who tested positive for a disease and the total number of people that were tested.
+
+\subsection{Priors}
+
+For each of the model parameters we specify priors and hyperpriors. The regression parameters and intercept are given Gaussian priors, where the default priors are $\beta_0 \sim N(0, 2)$ and $\beta_i \sim N(0, 0.4)$. 
+
+The field parameters are given penalised complexity priors, $\rho_{min}$ and $\rho_{prob}$, where $P(\rho < \rho_{min}) = \rho_{prob}$, and the variation, $\sigma_{max}$ and $\sigma_{prob}$, where $P(\sigma > \sigma_{max}) = \sigma_{prob}$. The effect of these hyperpriors is to regularise the field to have smaller variations over larger distances. Similarly for the iid effect, the priors are penalised complexity priors on the standard deviation, $sd_{max}$ and $sd_{prob}$, such that $P(sd > sd_{max}) = sd_{prob}$. This has the effect of regularising the iid effect to be small.
+
+For models that use a Gaussian likelihood, a log gamma prior is set on the log of the precision, $\log\tau \sim \log\Gamma(shape = 1, rate = 5e-05)$, to regularise the dispersion ($\sigma = 1/\sqrt\tau$) to take low values. This is the same as the prior set by INLA for the dispersion of the normal likelihood.
+
+
+\section{TMB implementation} \label{sec:implementation}
+
+The \pkg{disaggregation} package is built on Template Model Builder (\pkg{TMB})~\cite{tmb2016}, which is a tool for buidling flexible complex models based on C++. \pkg{TMB} combines the packages CppAD~\cite{bell2012cppad}, for automatic differentiation in C++, Eigen~\cite{guennebaud2010eigen}, a C++ library for linear algebra, and CHOLMOD~\cite{chen2008algorithm}, a package for efficient computation of sparse matrices. The use of these packages allows an efficient implementation of the applied Laplace approximation~\cite{skaug2006automatic} with exact derivatives. \pkg{TMB} calculates first and second order derivatives of the objective function using automatic differentiation~\cite{griewank2008evaluating}.
+
+More about mathematical details of Laplace approximation and automatic differentiation.
+
+The \pkg{disaggregation} package contains a C++ function that defines the model and computes the joint likelihood as a function of the parameters and the random effects, in the format expected by \pkg{TMB}. The \pkg{TMB} package then calculates estimates of both parameters and random effects using the Laplace approximation for the likelihood. Evaluation of the objective function and its derivatives is performed in \proglang{R}.
+
+\section{Package usage} \label{sec:code}
+
+In this section we show how to use the \pkg{disaggregation} package uasing real malaria data of aggregated malaria case counts across Madagascar, and real environmental covariates, such as temperature, rainfall and elevation, to inform spatial hetrogenity in malaria risk. The latest version of \pkg{disaggregation} should always be available from the Comprehensive R Archive Network (CRAN) at \href{http://CRAN.R-project.org/package=disaggregation}{http://CRAN.R-project.org/package=disaggregation}. Run the following commands to install and load the package.
+
+%
+<<installrun, echo=FALSE, message=FALSE>>=
+#devtools::install_github("aknandi/disaggregation")
+library(disaggregation, quietly = TRUE)
+library(raster, quietly = TRUE)
+library(dplyr, quietly = TRUE)
+library(magrittr, quietly = TRUE)
+@
+%
+
+%
+<<installview, eval=FALSE>>=
+devtools::install_github("aknandi/disaggregation")
+library(disaggregation)
+library(raster)
+library(dplyr)
+library(magrittr)
+@
+%
+
+We then setup the data to use in the \pkg{disaggregation}.
+%
+<<setuppaths>>=
+API_path <- 'data/api_subnational.csv'
+population_path <-'data/pop_at_risk_pf_2013.tif'
+shapefile_path <- 'data/admin2019_2.shp'
+
+covariate_raster_paths <- c(
+  'data/MODIS_LST_Day.mean.5km.tif',
+  'data/MODIS_EVI.mean.5km.tif',
+  'data/SRTM_elevation.5km.mean.tif',
+  'data/MODIS_LST_Day.SD.5km.tif'
+)
+
+# Make a RasterStack of covariates to the extent of Madagascar and scale values
+covariates <- lapply(covariate_raster_paths, raster)
+covariate_stack <- stack(covariates)
+covariate_stack <- crop(covariate_stack, extent(c(42, 52, -26, -10))) %>% scale
+
+# Read in the incidence data and only select data from Madagascar 2013
+api <- read.csv(API_path)
+api <- api %>% filter(iso3 == 'MDG', year == 2013)
+
+# Read in the shapefile and only keep those that contain incidence data
+shapes <- shapefile(shapefile_path)
+shapes <- shapes[shapes$ID_2 %in% as.character(api$fdef_id), ]
+
+# Add incidence information to the shapefile (incidence = API * population/1000)
+indices <- match(shapes$ID_2, as.character(api$fdef_id))
+shapes$inc <- (api$api_mean_pf[indices] * api$pop_at_risk_pf[indices])/1000
+
+# Read in the population raster and crop it to the extent of Madagascar
+population_raster <- raster(population_path)
+population_raster <- crop(population_raster, extent(c(42, 52, -26, -10)))
+@
+%
+
+The main functions are \code{prepare_data}, \code{fit_model} and \code{predict}.
+
+Firstly, we use the \code{prepare_data} function to setup all the data in the format needed in the disaggregation modelling. This function performs various data manipulation tasks to create objects that are required to provide for fitting the model. The required input data for the \code{prepare_data} function are a SpatialPolygonDataFrame containing the response data and a RasterStack of covariates to be used in the model. The variable names in the SpatialPolygonDataFrame of the response count data and the polygon ID are defined by the user.
+
+An optional aggregation raster can be provided. The aggregation raster defines how the pixels within each polygon are aggregated. The disaggregation model performs a weighted sum of the pixel prediction, weighted by the pixel values in the aggregation raster. In this case our pixel predictions are malaria incidence rate, so we use the population raster to aggregate pixel incidence rate by summing the number of cases (rate weighted by population). If no aggregation raster is provided a uniform distribution is assumed, i.e. the pixel predictions are aggregated to polygon level by summing the pixel values.
+
+The values of the covariates (as well as the aggregation raster, if given) are extracted at each pixel within the polygons and stored as a data.frame with a row for each pixel and a column for each covariate (\code{parallelExtract} function). The extraction of each covariate is performed in parallel over the number of cores defined by the argument \code{ncores}. The values extracted from the aggregation raster are returned as an array of values, one for each pixel.
+
+In order to know which pixels are contained in each polygon, a matrix is constructed that contains the start and end pixel index for each polygon (\code{getStartendindex} function). Additionally, an INLA mesh is built to use for the spatial field (\code{build_mesh} function). The \code{mesh.args} argument allows you to supply a list of INLA mesh parameters to control the mesh used for the spatial field. The mesh can take a while to construct, so if you want to prepare the data without buidling the mesh, the user can set the \code{makeMesh} flag to FALSE. However, you cannot then fit the disaggregation model without the mesh.
+
+If there are any NAs in the response or covariate data within the polygons the \code{prepare_data} method will return an error. This can be dealt with using the \code{na.action} flag, which is automatically off.  Ideally the NAs in the data would be dealt with by the user beforehand, however, setting na.action = TRUE will automatically deal with NAs. It removes any polygons that have NAs as a response, sets any aggregation pixels with NA to zero and sets covariate NAs pixels to the median value for the that covariate.
+
+%
+<<prepare_data>>=
+dis_data <- prepare_data(polygon_shapefile = shapes, 
+                         covariate_rasters = covariate_stack, 
+                         aggregation_raster = population_raster, 
+                         mesh.args = list(max.edge = c(0.7, 8), 
+                                          cut = 0.05, 
+                                          offset = c(1, 2)),
+                         id_var ='ID_2',
+                         response_var = 'inc',
+                         na.action = TRUE,
+                         ncores = 8)
+@
+%
+
+We can see a summary of the data, using the generic \code{summary} function, and \code{plot} the data. The summary function returns information on how many pixels and polygons the data contains, how many pixels in the smallest and largest polygons and a summary of the covariate data. The \code{plot} functions plots a map of the polygon response data, the covariate rasters and the INLA mesh.
+
+%
+<<showdata>>=
+summary(dis_data)
+plot(dis_data)
+@
+%
+
+The \code{prepare_data} function returns an object of class \code{disag.data}, which is designed to be used directly in the \code{fit_model} function.
+
+Now we can fit the disaggregation model using \code{fit_model}. Here we use a poisson likelihood for the incident count data with a log link function. Options for the likelihood are gaussian, poisson and binomial, and options for the link function are logit, log and identity. The spatial field and iid effect are components of the model by default, they can be turned off using the \code{field} and \code{iid} flags. We specify all of the priors for the model in a single list. Hyperpriors for the field are given as penalised complexity priors - specify $\rho_{min}$ and $\rho_{prob}$ for the range of the field, where $P(\rho < \rho_{min}) = \rho_{prob}$, and $\sigma_{min}$ and $\sigma_{prob}$ for the variation of the field, where $P(\sigma > \sigma_{min}) = \sigma_{prob}$. Similarly, you specify penalised complexity priors for the iid effect.
+The \code{iterations} argument specifies the maximum number of iterations the model can run for to find an optimal point. In order to print more verbose output you can set the \code{silent} argument to FALSE.
+
+%
+<<fit_model>>=
+fitted_model <- fit_model(data = dis_data,
+                          iterations = 1000,
+                          family = 'poisson',
+                          link = 'log',
+                          priors = list(priormean_intercept = 0,
+                                        priorsd_intercept = 2,
+                                        priormean_slope = 0.0,
+                                        priorsd_slope = 0.4,
+                                        prior_rho_min = 3,
+                                        prior_rho_prob = 0.01,
+                                        prior_sigma_max = 1,
+                                        prior_sigma_prob = 0.01))
+@
+%
+
+We can get a summary and plot of the model output. The \code{summary} function gives the estimate and standard error of the fixed effect parameters in the model, as well as the negative log likelihood and in-sample performance metrics (root mean squared error, mean absolute error, pearson correlation coefficient and spearman rank correlation coefficient). The \code{plot} function produces two plots: one of the fixed effects parameters and one of the observed data against in-sample predictions.
+
+%
+<<showmodel>>=
+summary(fitted_model)
+plot(fitted_model)
+@
+%
+
+The \code{fit_model} function returns an object of class \code{fit.result}, which is designed to be used directly in the \code{predict} function.
+Therefore, now once we have fitted the model, we are ready to predict the malaria incidence rate across Madagascar.
+
+To predict over a different spatial extent to that used in the model, a RasterStack covering the region to make predictions over can be passed as the \code{newdata} argument. If this argument is not given, predictions are made over the covaraite data used in the fit. If the user wants to include the iid effect from the model as a component in the prediction then the \code{predict_iid} logical flag should be set to TRUE, otherwise, the iid effect will not be predicted. 
+
+For the uncertainty calculations, parameter values are sampled from the posterior distribution and summarised. The number of parameter draws used to calculate the uncertainty is set by the user via the \code{N} parameter (default: 100), and the size of the credible interval (75\%, 95\%, ...) to be calculated when summarising is set via the argument \code{CI} (default: 0.95). 
+
+%
+<<predict_model>>=
+model_predictions <- predict(fitted_model)
+@
+%
+
+The function \code{predict} returns a list of two objects: the mean predictions (of class \code{predictions}) and the uncertainty rasters (of class \code{uncertainty}). The mean predictions contain a raster of the mean prediction of the incidence rate, as well as rasters of the field, iid (if predicted) and covariate component of the linear predictor. The uncertainty contains a RasterStack of the prediction realisations and a RasterStack of the upper and lower credible intervals. 
+
+The \code{plot} function can be used on both the \code{predictions} and \code{uncertainty} objects.
+
+%
+<<showpredictions>>=
+plot(model_predictions$mean_predictions)
+plot(model_predictions$uncertainty_predictions)
+@
+
+Using three simple functions we have been able to fit a Bayesian spatial disaggregation model and predict pixel-level incidence rate across Madagascar using aggregated incidence data and pixel-level environmental covariates.
+
+\section{Comparison with MCMC} \label{sec:comparison}
+
+In this section we show performance comparisons between modelling using this \pkg{disaggregation} package, based on \pkg{TMB}, and using Markov chain Monte Carlo (MCMC). MCMC algorithms sample the probability space to produce an esimate of the probability distribution. Tese algorithms tend to be slow, as it takes a long time to effectively sample the likelihood space. Using the Laplace approximation, automatic differentiation and efficienct computation of sparse matrices within \pkg{TMB}, the time taken to optimise the model is be considerably shorter. Here we compare the time and performance of the two techniques.
+
+The model described above for malaria in Madagascar is fitted by running MCMC using the \pkg{tmbstan} package, with the NUTS algorithm. The model is fitted three different ways: firstly, the MCMC algorithm is run for 1000 iteration, which takes 8 hours; secondly algorithm is then run for 26 iterations, taking 3 minutes; and thirdly the model is optimised using \pkg{TMB} within the \pkg{disaggregation} package, which takes 56 seconds. Fitted parameter values for all three methods are given in the table below. 
+
+%
+<<mcmc, eval=FALSE>>=
+library(tmbstan)
+
+m <- fit_model(data = dis_data, 
+               iterations = 1,
+               family = 'poisson', 
+               link = 'log',
+               priors = list(priormean_intercept = 0,
+                             priorsd_intercept = 2,
+                             priormean_slope = 0.0,
+                             priorsd_slope = 0.4,
+                             prior_rho_min = 3,
+                             prior_rho_prob = 0.01,
+                             prior_sigma_max = 1,
+                             prior_sigma_prob = 0.01))
+
+# Running the MCMC algorithm for 3 minutes
+start <- Sys.time()
+mcmc_out <- tmbstan(m$obj, chains = 4, iter = 30, 
+                    cores = getOption('mc.cores', 4))
+end <- Sys.time()
+print(end - start)
+
+# Running the MCMC algorithm for 8 hours
+start <- Sys.time()
+mcmc_out2 <- tmbstan(m$obj, chains = 4, iter = 1000, 
+                     cores = getOption('mc.cores', 4))
+end <- Sys.time()
+print(end - start)
+
+# Plot the trace of the parameter values for each sampling method
+stan_trace(mcmc_out, pars = c('intercept', 
+                              'slope[1]', 'slope[2]', 'slope[3]', 'slope[4]', 
+                              'iideffect_log_tau', 'log_sigma', 'log_rho'))
+stan_trace(mcmc_out2, pars = c('intercept', 
+                               'slope[1]', 'slope[2]', 'slope[3]', 'slope[4]', 
+                               'iideffect_log_tau', 'log_sigma', 'log_rho'))
+@
+%
+
+The trace of the MCMC parameter values for the long and the short experiments is given in Figures~\ref{fig:mcmcshort} and \ref{fig:mcmclong} respectively. It can be seen that running the MCMC algorithm for 3 minutes does not show mixing between the different chain; the algorithm much be run for much longer, for exmaple 8 hours, to get sufficient chain mixing. The \pkg{disaggregation} package produces similar results to the MCMC algorithm that runs for 8 hours, however the model fitting using the \pkg{disaggregation} package only takes 56 seconds. Therefore, it is clear that the \pkg{disaggregation} package provides a quick and simple way to run disaggregation models, that cannot practically be done using MCMC.
+
+%
+\begin{table}
+\begin{tabular}{l|ll|ll|ll}
+ & \multicolumn{2}{|c|}{MCMC (8 hours)} & \multicolumn{2}{|c|}{MCMC (24 seconds)} & \multicolumn{2}{|c}{TMB (56 seconds)} \\
+Parameter & Mean & sd & Mean & sd & Mean & sd \\
+Intercept & -3.16 & 0.19 & -0.20 & 1.33 & -3.12 & 0.27 \\
+Slope 1 & 0.32 & 0.23 & -0.27 & 0.80 & 0.24 & 0.27 \\
+Slope 2 & 0.11 & 0.22 & -0.65 & 0.86 & 0.30 & 0.21\\
+Slope 3 & -0.55 & 0.18 & -0.35 & 0.95 & -0.37 & 0.20 \\
+Slope 4 & -0.23 & 0.16 & 0.12 & 0.35 & -0.24 & 0.21 \\
+iid $log(\tau)$ & 1.06 & 0.26 & 0.04 & 1.16 & 1.10 & 0.27 \\
+$log(\sigma)$ & -3.29 & 0.61 & -0.87 & 0.94 & -3.55 & 0.59 \\
+$log(\rho)$ & 0.75 & 0.34 & 0.65 & 0.93 & -0.56 & 0.30 \\
+\end{tabular}
+\end{table}
+%
+
+%
+\begin{figure}[t!]
+\centering
+\includegraphics[width=\linewidth]{figures/mcmc_short_trace.pdf}
+\caption{Trace of the fixed effects parameters for MCMC using NUTS sampling, running the algorithm for 3 minutes.}
+\label{fig:mcmcshort}
+\end{figure}
+%
+
+%
+\begin{figure}[t!]
+\centering
+\includegraphics[width=\linewidth]{figures/mcmc_long_trace.pdf}
+\caption{Trace of the fixed effects parameters for MCMC using NUTS sampling, running the algorithm for 8 hours.}
+\label{fig:mcmclong}
+\end{figure}
+%
+
+%% -- Summary/conclusions/discussion -------------------------------------------
+
+\section{Conclusions} \label{sec:conclusions}
+
+Disaggregation modelling, which involves predicting at fine-scale resolution using areal data over heterogenous regions, has become widely used in fields such as epidemiology, ecology and something. The \pkg{disaggregation} package implements Bayesian spatial disaggregation modelling with a simple, easy to use \proglang{R} interface. The package includes simple data preparation, fitting and prediction functions that allow some user defined model flexibility. In this paper we have presented an application of the package, predicting malaria incidence rate across Madagascar from aggregated count data and environmental covariates. 
+
+The modelling framework is implemented using the Laplace approximation and automatic differentiation within the \pkg{TMB} package. This allows fast, optimised calculations in C++. These disaggregation models are computationally intensive and take a long time using Markov Chian Monte Carlo (MCMC) optimisation techniques. Using \pkg{TMB}, the models are much faster and produce similar results 
+
+The \pkg{disaggregation} package can be extended to include spatio-temporal disaggregation models. This would require a spatio-temporal field as well as dynamic covariates. However, this would be significantly more computationally intensive. Additionally, tools for cross-validation could be included within the package. Cross-validation of spatial models is non-trivial as random cross validation over estimates the performance of the model due to spatial autocorrelation and spatial cross-validation will show good performance if your underlying model is generalisable to new geographic regions.
+
+
+%% -- Optional special unnumbered sections -------------------------------------
+
+\section*{Computational details}
+
+\begin{leftbar}
+If necessary or useful, information about certain computational details
+such as version numbers, operating systems, or compilers could be included
+in an unnumbered section. Also, auxiliary packages (say, for visualizations,
+maps, tables, \dots) that are not cited in the main text can be credited here.
+\end{leftbar}
+
+The results in this paper were obtained using
+\proglang{R}~\Sexpr{paste(R.Version()[6:7], collapse = ".")} with the
+\pkg{MASS}~\Sexpr{packageVersion("MASS")} package. \proglang{R} itself
+and all packages used are available from the Comprehensive
+\proglang{R} Archive Network (CRAN) at
+\url{https://CRAN.R-project.org/}.
+
+
+\section*{Acknowledgments}
+
+\begin{leftbar}
+All acknowledgments (note the AE spelling) should be collected in this
+unnumbered section before the references. It may contain the usual information
+about funding and feedback from colleagues/reviewers/etc. Furthermore,
+information such as relative contributions of the authors may be added here
+(if any).
+\end{leftbar}
+
+
+%% -- Bibliography -------------------------------------------------------------
+%% - References need to be provided in a .bib BibTeX database.
+%% - All references should be made with \cite, \citet, \citep, \citealp etc.
+%%   (and never hard-coded). See the FAQ for details.
+%% - JSS-specific markup (\proglang, \pkg, \code) should be used in the .bib.
+%% - Titles in the .bib should be in title case.
+%% - DOIs should be included where available.
+
+\bibliography{refs}
+
+
+%% -- Appendix (if any) --------------------------------------------------------
+%% - After the bibliography with page break.
+%% - With proper section titles and _not_ just "Appendix".
+
+\newpage
+
+\begin{appendix}
+
+\section{More technical details} \label{app:technical}
+
+\begin{leftbar}
+Appendices can be included after the bibliography (with a page break). Each
+section within the appendix should have a proper section title (rather than
+just \emph{Appendix}).
+
+For more technical style details, please check out JSS's style FAQ at
+\url{https://www.jstatsoft.org/pages/view/style#frequently-asked-questions}
+which includes the following topics:
+\begin{itemize}
+  \item Title vs.\ sentence case.
+  \item Graphics formatting.
+  \item Naming conventions.
+  \item Turning JSS manuscripts into \proglang{R} package vignettes.
+  \item Trouble shooting.
+  \item Many other potentially helpful details\dots
+\end{itemize}
+\end{leftbar}
+
+
+\section[Using BibTeX]{Using \textsc{Bib}{\TeX}} \label{app:bibtex}
+
+\begin{leftbar}
+References need to be provided in a \textsc{Bib}{\TeX} file (\code{.bib}). All
+references should be made with \verb|\cite|, \verb|\citet|, \verb|\citep|,
+\verb|\citealp| etc.\ (and never hard-coded). This commands yield different
+formats of author-year citations and allow to include additional details (e.g.,
+pages, chapters, \dots) in brackets. In case you are not familiar with these
+commands see the JSS style FAQ for details.
+
+Cleaning up \textsc{Bib}{\TeX} files is a somewhat tedious task -- especially
+when acquiring the entries automatically from mixed online sources. However,
+it is important that informations are complete and presented in a consistent
+style to avoid confusions. JSS requires the following format.
+\begin{itemize}
+  \item JSS-specific markup (\verb|\proglang|, \verb|\pkg|, \verb|\code|) should
+    be used in the references.
+  \item Titles should be in title case.
+  \item Journal titles should not be abbreviated and in title case.
+  \item DOIs should be included where available.
+  \item Software should be properly cited as well. For \proglang{R} packages
+    \code{citation("pkgname")} typically provides a good starting point.
+\end{itemize}
+\end{leftbar}
+
+\end{appendix}
+
+%% -----------------------------------------------------------------------------
+
+
+\end{document}

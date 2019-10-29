@@ -1,0 +1,10 @@
+Data used in the JSS paper for the disaggregation package.
+All copied from the Z drive on 29/10/19, exact paths given below
+
+api_subnational: Z:\GBD2019\Processing\Stages\04c_API_Data_Export\Checkpoint_Outputs\Decomp 4\subnational.csv
+admin2019_2: Z:\master_geometries\Admin_Units\Global\MAP\2019\admin2019_2.shp
+pop_at_risk_pf_2013: Z:\GBD2019\Processing\Stages\03_Muster_Population_Figures\Verified_Outputs\Output_Pop_At_Risk_Pf_5K\ihme_corrected_frankenpop_All_Ages_3_2013_at_risk_pf.tif
+MODIS_LST_Day.mean.5km: Z:\mastergrids\MODIS_Global\MOD11A2_v6_LST\LST_Day\5km\Synoptic\LST_Day_v6.Synoptic.Overall.mean.5km.mean.tif
+MODIS_LST_Day.SD.5km: Z:\mastergrids\MODIS_Global\MCD43D6_v6_BRDF_Reflectance\EVI_v6\5km\Synoptic\EVI_v6.Synoptic.Overall.mean.5km.mean.tif
+MODIS_EVI.mean.5km: Z:\mastergrids\Other_Global_Covariates\Elevation\SRTM-Elevation\5km\Synoptic\SRTM_elevation.Synoptic.Overall.Data.5km.mean.tif
+SRTM_elevation.5km.mean: Z:\mastergrids\MODIS_Global\MOD11A2_v6_LST\LST_Day\5km\Synoptic\LST_Day_v6.Synoptic.Overall.SD.5km.mean.tif
