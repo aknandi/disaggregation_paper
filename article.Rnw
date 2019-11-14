@@ -33,9 +33,9 @@ knitr::opts_chunk$set(
 %% - \AND starts a new line, \And does not.
 \author{Anita K Nandi\\University of Oxford
    \And Tim CD Lucas\\University of Oxford
-   \And Rohan Arambepola\\University of Oxford
-   \AND Andre Python\\University of Oxford
-   \And Daniel J Weiss\\University of Oxford}
+   \And Rohan Arambepola\\University of Oxford}
+   %\AND Andre Python\\University of Oxford
+   %\And Daniel J Weiss\\University of Oxford}
 \Plainauthor{Anita K Nandi, Tim CD Lucas, Rohan Arambepola, Andre Python, Daniel J Weiss}
 
 %% - \title{} in title case
@@ -47,7 +47,7 @@ knitr::opts_chunk$set(
 
 %% - \Abstract{} almost as usual
 \Abstract{
-  Disaggregation modelling, or downscaling, has been used across many fields including, epidemiology, ecology and something else. These models use repsonse data agreggated of large heterogenous regions and predict the response at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \emph{disaggregation}, which provides the functionality to streamline the process of running a disaggregation model for fine scale predictions.
+  Disaggregation modelling, or downscaling, has been used across many fields including epidemiology and ecology. These models use repsonse data agreggated of large heterogenous regions and predict the response at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \emph{disaggregation}, which provides the functionality to streamline the process of running a disaggregation model for fine scale predictions.
 }
 
 %% - \Keywords{} with LaTeX markup, at least one required
@@ -91,9 +91,9 @@ knitr::opts_chunk$set(
 
 Methods for estimating high resolution repsonse information from models of aggregated repsonse data over large spatial regions are 
 becoming increasingly sought after in disease risk~\cite{li2012log, diggle2013spatial}, expecially in malaria mapping~\cite{sturrock2014fine, alegana2016advances}, and ecological speices distribution~\cite{keil2013downscaling, barwell2014can}. The aggreagtion of repsonse data over large 
-heterongenous regions is problematic for understanding the fine scale distribution. However, by using fine scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the agreggated area.
+heterongenous regions is problematic for understanding the fine scale distribution. However, by using fine scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the agreggated area. This method has recently been applied in the latest global high-resolution maps of \emph{Plasmodium falciparum} and \emph{Plasmodium vivax} malaria~\cite{falciparum2019, vivax2019}.
 
-Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the repsonse data. Traditional spatial modelling software package, \pkg{INLA}~\cite{rue2009approximate}, has been shown to very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem. Disaggregation models can be implemented in \pkg{TMB} (\cite{tmb2016}) with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models with some level of flexibility.
+Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the repsonse data. Traditional spatial modelling software package, \pkg{INLA}~\cite{rue2009approximate}, has been shown to very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem. Disaggregation models can be implemented in \pkg{TMB}~\cite{tmb2016} with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models with some degree of flexibility.
 
 %% -- Manuscript ---------------------------------------------------------------
 
@@ -172,7 +172,9 @@ The \pkg{disaggregation} package contains a C++ function that defines the model 
 
 \section{Package usage} \label{sec:code}
 
-In this section we show how to use the \pkg{disaggregation} package uasing real malaria data of aggregated malaria case counts across Madagascar, and real environmental covariates, such as temperature, rainfall and elevation, to inform spatial hetrogenity in malaria risk. The latest version of \pkg{disaggregation} should always be available from the Comprehensive R Archive Network (CRAN) at \href{http://CRAN.R-project.org/package=disaggregation}{http://CRAN.R-project.org/package=disaggregation}. Run the following commands to install and load the package.
+In this section we show how to use the \pkg{disaggregation} package using real malaria data of aggregated malaria case counts across Madagascar. Malaria is a infectious disease caused by parasites of the \emph{Plasmodium} group, transmitted by \emph{Anopheles} mosquitoes. Malaria transmission is therefore closely related to mosquito and parasite development. Environmental factors such as temperature, rainfall and elevation have been shown to have signifcant effect on mosquito survival and development; in general mosquitoes favour warm, humid environments with moderate rainfall. Therefore, such environmental covariates would be useful in a malaria disaggregation model to inform fine-scale distributions. In this model we use the environmental covariates of mean land surface temperature (LST), variation in LST, elevation, and enhanced vegetation index (EVI) to inform spatial hetrogenity in malaria risk. These covaraites are obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS), which provides many measurements over the entire Earth's surface (\url{https://modis.gsfc.nasa.gov/data/}). 
+
+The latest version of \pkg{disaggregation} should always be available from the Comprehensive R Archive Network (CRAN) at \href{http://CRAN.R-project.org/package=disaggregation}{http://CRAN.R-project.org/package=disaggregation}. Run the following commands to install and load the package.
 
 %
 <<installrun, echo=FALSE, message=FALSE>>=
@@ -321,9 +323,9 @@ Using three simple functions we have been able to fit a Bayesian spatial disaggr
 
 \section{Comparison with MCMC} \label{sec:comparison}
 
-In this section we show performance comparisons between modelling using this \pkg{disaggregation} package, based on \pkg{TMB}, and using Markov chain Monte Carlo (MCMC). MCMC algorithms sample the probability space to produce an esimate of the probability distribution. Tese algorithms tend to be slow, as it takes a long time to effectively sample the likelihood space. Using the Laplace approximation, automatic differentiation and efficienct computation of sparse matrices within \pkg{TMB}, the time taken to optimise the model is be considerably shorter. Here we compare the time and performance of the two techniques.
+In this section we show performance comparisons between modelling using this \pkg{disaggregation} package, based on \pkg{TMB}, and using Markov chain Monte Carlo (MCMC). MCMC algorithms sample the probability space to produce an esimate of the probability distribution. These algorithms tend to be slow, as it takes a long time to effectively sample the likelihood space. In contrast, the \pkg{disaggregation} package, which uses the Laplace approximation, automatic differentiation and efficient computation of sparse matrices within \pkg{TMB}, takes a considerably shorter time to optimise the model. Here we compare the time and performance of the two techniques.
 
-The model described above for malaria in Madagascar is fitted by running MCMC using the \pkg{tmbstan} package, with the NUTS algorithm. The model is fitted three different ways: firstly, the MCMC algorithm is run for 1000 iteration, which takes 8 hours; secondly algorithm is then run for 26 iterations, taking 3 minutes; and thirdly the model is optimised using \pkg{TMB} within the \pkg{disaggregation} package, which takes 56 seconds. Fitted parameter values for all three methods are given in the table below. 
+The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS algorithm. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took x hours. This number of iterations was chosen to be the minimum required for the value of Rhat to drop below 1.05 for all model parameters. The model is optimised using \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in the table below. 
 
 %
 <<mcmc, eval=FALSE>>=
@@ -342,45 +344,37 @@ m <- fit_model(data = dis_data,
                              prior_sigma_max = 1,
                              prior_sigma_prob = 0.01))
 
-# Running the MCMC algorithm for 3 minutes
-start <- Sys.time()
-mcmc_out <- tmbstan(m$obj, chains = 4, iter = 30, 
-                    cores = getOption('mc.cores', 4))
-end <- Sys.time()
-print(end - start)
-
 # Running the MCMC algorithm for 8 hours
 start <- Sys.time()
-mcmc_out2 <- tmbstan(m$obj, chains = 4, iter = 1000, 
+mcmc_out <- tmbstan(m$obj, chains = 4, iter = 8000, warmup = 2000,
                      cores = getOption('mc.cores', 4))
 end <- Sys.time()
 print(end - start)
 
 # Plot the trace of the parameter values for each sampling method
 stan_trace(mcmc_out, pars = c('intercept', 
-                              'slope[1]', 'slope[2]', 'slope[3]', 'slope[4]', 
-                              'iideffect_log_tau', 'log_sigma', 'log_rho'))
-stan_trace(mcmc_out2, pars = c('intercept', 
                                'slope[1]', 'slope[2]', 'slope[3]', 'slope[4]', 
                                'iideffect_log_tau', 'log_sigma', 'log_rho'))
 @
 %
 
-The trace of the MCMC parameter values for the long and the short experiments is given in Figures~\ref{fig:mcmcshort} and \ref{fig:mcmclong} respectively. It can be seen that running the MCMC algorithm for 3 minutes does not show mixing between the different chain; the algorithm much be run for much longer, for exmaple 8 hours, to get sufficient chain mixing. The \pkg{disaggregation} package produces similar results to the MCMC algorithm that runs for 8 hours, however the model fitting using the \pkg{disaggregation} package only takes 56 seconds. Therefore, it is clear that the \pkg{disaggregation} package provides a quick and simple way to run disaggregation models, that cannot practically be done using MCMC.
+The trace of the MCMC parameter values is given in Figures~\ref{fig:mcmclong}. It can be seen that the MCMC algorithm has been run for long enough to get sufficient chain mixing. The \pkg{disaggregation} package produces similar results to the MCMC algorithm, however the model fitting using the \pkg{disaggregation} package only takes 56 seconds. Therefore, it is clear that the \pkg{disaggregation} package provides a quick and simple way to run disaggregation models, that cannot practically be done using MCMC.
 
 %
 \begin{table}
-\begin{tabular}{l|ll|ll|ll}
- & \multicolumn{2}{|c|}{MCMC (8 hours)} & \multicolumn{2}{|c|}{MCMC (3 minutes)} & \multicolumn{2}{|c}{TMB (56 seconds)} \\
-Parameter & Mean & sd & Mean & sd & Mean & sd \\
-Intercept & -3.07 & 0.37 & -3.31 & 0.19 & -3.12 & 0.27 \\
-Slope 1 & 0.22 & 0.27 & 0.50 & 0.43 & 0.24 & 0.27 \\
-Slope 2 & 0.30 & 0.20 & 0.21 & 0.42 & 0.30 & 0.21\\
-Slope 3 & -0.35 & 0.21 & -0.50 & 0.33 & -0.37 & 0.20 \\
-Slope 4 & -0.22 & 0.21 & -0.24 & 0.15 & -0.24 & 0.21 \\
-iid $log(\tau)$ & 1.06 & 0.26 & -0.14 & 1.13 & 1.10 & 0.27 \\
-$log(\sigma)$ & -3.29 & 0.61 & -3.37 & 2.35 & -3.55 & 0.59 \\
-$log(\rho)$ & 0.75 & 0.34 & 2.78 & 1.72 & -0.56 & 0.30 \\
+\centering
+\begin{tabular}{l|ll|ll}
+ & \multicolumn{2}{|c|}{MCMC (x hours - TBC)} & \multicolumn{2}{|c}{TMB (56 seconds)} \\
+Parameter & Mean & SD & Mean & SD \\
+\hline
+Intercept & -3.06 & 0.42 & -3.12 & 0.27 \\
+Slope 1 & 0.17 & 0.29 & 0.24 & 0.27 \\
+Slope 2 & 0.31 & 0.22 & 0.30 & 0.21\\
+Slope 3 & -0.34 & 0.22 & -0.37 & 0.20 \\
+Slope 4 & -0.24 & 0.26 & -0.24 & 0.21 \\
+iid $log(\tau)$ & 1.11 & 0.28 & 1.10 & 0.27 \\
+$log(\sigma)$ & -3.35 & 0.60 & -3.55 & 0.59 \\
+$log(\rho)$ & 0.74 & 0.34 & -0.56 & 0.30 \\
 \end{tabular}
 \end{table}
 %
@@ -388,17 +382,8 @@ $log(\rho)$ & 0.75 & 0.34 & 2.78 & 1.72 & -0.56 & 0.30 \\
 %
 \begin{figure}[t!]
 \centering
-\includegraphics[width=\linewidth]{figures/mcmc_short_trace.pdf}
-\caption{Trace of the fixed effects parameters for MCMC using NUTS sampling, running the algorithm for 3 minutes.}
-\label{fig:mcmcshort}
-\end{figure}
-%
-
-%
-\begin{figure}[t!]
-\centering
-\includegraphics[width=\linewidth]{figures/mcmc_long_trace.pdf}
-\caption{Trace of the fixed effects parameters for MCMC using NUTS sampling, running the algorithm for 8 hours.}
+\includegraphics[width=\linewidth]{figures/mcmc_long.pdf}
+\caption{Trace of the fixed effects parameters for MCMC using NUTS sampling, running the algorithm for x hours.}
 \label{fig:mcmclong}
 \end{figure}
 %
@@ -418,30 +403,25 @@ The \pkg{disaggregation} package can be extended to include spatio-temporal disa
 
 \section*{Computational details}
 
-\begin{leftbar}
-If necessary or useful, information about certain computational details
-such as version numbers, operating systems, or compilers could be included
-in an unnumbered section. Also, auxiliary packages (say, for visualizations,
-maps, tables, \dots) that are not cited in the main text can be credited here.
-\end{leftbar}
-
 The results in this paper were obtained using
 \proglang{R}~\Sexpr{paste(R.Version()[6:7], collapse = ".")} with the
 \pkg{MASS}~\Sexpr{packageVersion("MASS")} package. \proglang{R} itself
 and all packages used are available from the Comprehensive
 \proglang{R} Archive Network (CRAN) at
-\url{https://CRAN.R-project.org/}.
-
+\url{https://CRAN.R-project.org/}, apart from \pkg{INLA}, which can be 
+installed in \proglang{R} using the command:
+%
+<<inla, eval=FALSE>>=
+install.packages("INLA", 
+                 repos = c(getOption("repos"), 
+                           INLA="https://inla.r-inla-download.org/R/stable"), 
+                 dep=TRUE)
+@
+%
 
 \section*{Acknowledgments}
 
-\begin{leftbar}
-All acknowledgments (note the AE spelling) should be collected in this
-unnumbered section before the references. It may contain the usual information
-about funding and feedback from colleagues/reviewers/etc. Furthermore,
-information such as relative contributions of the authors may be added here
-(if any).
-\end{leftbar}
+We would like to thank the Bill and Melinda Gates Foundation for funding this research.
 
 
 %% -- Bibliography -------------------------------------------------------------
@@ -459,57 +439,57 @@ information such as relative contributions of the authors may be added here
 %% - After the bibliography with page break.
 %% - With proper section titles and _not_ just "Appendix".
 
-\newpage
-
-\begin{appendix}
-
-\section{More technical details} \label{app:technical}
-
-\begin{leftbar}
-Appendices can be included after the bibliography (with a page break). Each
-section within the appendix should have a proper section title (rather than
-just \emph{Appendix}).
-
-For more technical style details, please check out JSS's style FAQ at
-\url{https://www.jstatsoft.org/pages/view/style#frequently-asked-questions}
-which includes the following topics:
-\begin{itemize}
-  \item Title vs.\ sentence case.
-  \item Graphics formatting.
-  \item Naming conventions.
-  \item Turning JSS manuscripts into \proglang{R} package vignettes.
-  \item Trouble shooting.
-  \item Many other potentially helpful details\dots
-\end{itemize}
-\end{leftbar}
-
-
-\section[Using BibTeX]{Using \textsc{Bib}{\TeX}} \label{app:bibtex}
-
-\begin{leftbar}
-References need to be provided in a \textsc{Bib}{\TeX} file (\code{.bib}). All
-references should be made with \verb|\cite|, \verb|\citet|, \verb|\citep|,
-\verb|\citealp| etc.\ (and never hard-coded). This commands yield different
-formats of author-year citations and allow to include additional details (e.g.,
-pages, chapters, \dots) in brackets. In case you are not familiar with these
-commands see the JSS style FAQ for details.
-
-Cleaning up \textsc{Bib}{\TeX} files is a somewhat tedious task -- especially
-when acquiring the entries automatically from mixed online sources. However,
-it is important that informations are complete and presented in a consistent
-style to avoid confusions. JSS requires the following format.
-\begin{itemize}
-  \item JSS-specific markup (\verb|\proglang|, \verb|\pkg|, \verb|\code|) should
-    be used in the references.
-  \item Titles should be in title case.
-  \item Journal titles should not be abbreviated and in title case.
-  \item DOIs should be included where available.
-  \item Software should be properly cited as well. For \proglang{R} packages
-    \code{citation("pkgname")} typically provides a good starting point.
-\end{itemize}
-\end{leftbar}
-
-\end{appendix}
+% \newpage
+% 
+% \begin{appendix}
+% 
+% \section{More technical details} \label{app:technical}
+% 
+% \begin{leftbar}
+% Appendices can be included after the bibliography (with a page break). Each
+% section within the appendix should have a proper section title (rather than
+% just \emph{Appendix}).
+% 
+% For more technical style details, please check out JSS's style FAQ at
+% \url{https://www.jstatsoft.org/pages/view/style#frequently-asked-questions}
+% which includes the following topics:
+% \begin{itemize}
+%   \item Title vs.\ sentence case.
+%   \item Graphics formatting.
+%   \item Naming conventions.
+%   \item Turning JSS manuscripts into \proglang{R} package vignettes.
+%   \item Trouble shooting.
+%   \item Many other potentially helpful details\dots
+% \end{itemize}
+% \end{leftbar}
+% 
+% 
+% \section[Using BibTeX]{Using \textsc{Bib}{\TeX}} \label{app:bibtex}
+% 
+% \begin{leftbar}
+% References need to be provided in a \textsc{Bib}{\TeX} file (\code{.bib}). All
+% references should be made with \verb|\cite|, \verb|\citet|, \verb|\citep|,
+% \verb|\citealp| etc.\ (and never hard-coded). This commands yield different
+% formats of author-year citations and allow to include additional details (e.g.,
+% pages, chapters, \dots) in brackets. In case you are not familiar with these
+% commands see the JSS style FAQ for details.
+% 
+% Cleaning up \textsc{Bib}{\TeX} files is a somewhat tedious task -- especially
+% when acquiring the entries automatically from mixed online sources. However,
+% it is important that informations are complete and presented in a consistent
+% style to avoid confusions. JSS requires the following format.
+% \begin{itemize}
+%   \item JSS-specific markup (\verb|\proglang|, \verb|\pkg|, \verb|\code|) should
+%     be used in the references.
+%   \item Titles should be in title case.
+%   \item Journal titles should not be abbreviated and in title case.
+%   \item DOIs should be included where available.
+%   \item Software should be properly cited as well. For \proglang{R} packages
+%     \code{citation("pkgname")} typically provides a good starting point.
+% \end{itemize}
+% \end{leftbar}
+% 
+% \end{appendix}
 
 %% -----------------------------------------------------------------------------
 
