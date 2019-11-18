@@ -117,7 +117,7 @@ link(pred_i) = \beta_0 + \beta X + GP(s_i) + u_j
 \end{equation}
 %
 
-where $X$ are the covariates, $GP$ is the gaussian random field and $u_j$ is the polygon-specific iid random effect. The Gaussian random field has a Matern covariance function, with hyperparameters $\rho = \frac{\sqrt{8\lambda}}{\kappa}$, the range of the field (beyond which correlation is $<$ 0.1), and $\sigma$, the marginal standard deviation, relating the magntiude of the variation of the field. Each of the model parameters and hyperparameters are given priors, which is discussed later. 
+where $\beta$ are the regression coefficients, $X$ are the covariates, $GP$ is the gaussian random field and $u_j$ is the polygon-specific iid random effect. The user defined link function is given by $link$. The Gaussian random field has a Matern covariance function, with hyperparameters $\rho = \frac{\sqrt{8\lambda}}{\kappa}$, the range of the field (beyond which correlation is $<$ 0.1), and $\sigma$, the marginal standard deviation, relating the magntiude of the variation of the field. Each of the model parameters and hyperparameters are given priors, which is discussed later. 
 
 The pixel predictions are then aggregated to the polygon level using the weighted sum (via the aggregation raster, $agg_i$):
 
@@ -136,18 +136,18 @@ The different likelihoods correspond to slightly different models ($y_j$ is the 
 \begin{itemize}
 \item {\textbf{Gaussian} ($\sigma_j$ is the dispersion of the polygon data)
 \begin{equation} \label{eq:gaussian}
-dnorm(y_j/\sum agg_i, rate_j, \sigma_j)
+N(y_j/\sum agg_i, rate_j, \sigma_j)
 \end{equation}
 Here $\sigma_j = \sigma \sqrt{\sum agg_i^2} / \sum agg_i$, where  $\sigma$ is the dispersion of the pixel data (a parameter learnt by the model) }
 
 \item \textbf{Binomial} (For a survey in polygon j, $y_j$ is the number positive and $N_j$ is the number tested),
 \begin{equation} \label{eq:binomial}
-dbinom(y_j, N_j, rate_j)
+Binom(y_j, N_j, rate_j)
 \end{equation}
 
 \item \textbf{Poisson} (predicts incidence count),
 \begin{equation} \label{eq:poisson}
-dpois(y_j, cases_j)
+Pois(y_j, cases_j)
 \end{equation}
 
 \end{itemize}
@@ -325,7 +325,7 @@ Using three simple functions we have been able to fit a Bayesian spatial disaggr
 
 In this section we show performance comparisons between modelling using this \pkg{disaggregation} package, based on \pkg{TMB}, and using Markov chain Monte Carlo (MCMC). MCMC algorithms sample the probability space to produce an esimate of the probability distribution. These algorithms tend to be slow, as it takes a long time to effectively sample the likelihood space. In contrast, the \pkg{disaggregation} package, which uses the Laplace approximation, automatic differentiation and efficient computation of sparse matrices within \pkg{TMB}, takes a considerably shorter time to optimise the model. Here we compare the time and performance of the two techniques.
 
-The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS algorithm using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations and doubling the number of iterations each time, until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. The model is optimised using \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. 
+The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS algorithm using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. The model is optimised using \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. 
 
 %
 <<mcmc, eval=FALSE>>=
@@ -379,7 +379,7 @@ $log(\rho)$ & 0.72 & 0.31 & -0.56 & 0.30 \\
 \end{table}
 %
 
-The trace of the MCMC parameter values is given in Figures~\ref{fig:mcmclong}. It can be seen that the MCMC algorithm has been run for long enough to get sufficient chain mixing. The \pkg{disaggregation} package produces similar results to the MCMC algorithm, however the model fitting using the \pkg{disaggregation} package only takes 56 seconds. Therefore, it is clear that the \pkg{disaggregation} package provides a quick and simple way to run disaggregation models, that cannot practically be done using MCMC.
+The trace of the MCMC parameter values is given in Figure~\ref{fig:mcmclong}. It can be seen that the MCMC algorithm has been run for long enough to get sufficient chain mixing. The \pkg{disaggregation} package produces similar results to the MCMC algorithm, however the model fitting using the \pkg{disaggregation} package only takes 56 seconds. Therefore, it can be seen that the \pkg{disaggregation} package provides a quick and simple way to run disaggregation models, that cannot practically be done using MCMC.
 
 %
 \begin{figure}[t!]
@@ -394,11 +394,13 @@ The trace of the MCMC parameter values is given in Figures~\ref{fig:mcmclong}. I
 
 \section{Conclusions} \label{sec:conclusions}
 
-Disaggregation modelling, which involves predicting at fine-scale resolution using areal data over heterogenous regions, has become widely used in fields such as epidemiology, ecology and something. The \pkg{disaggregation} package implements Bayesian spatial disaggregation modelling with a simple, easy to use \proglang{R} interface. The package includes simple data preparation, fitting and prediction functions that allow some user defined model flexibility. In this paper we have presented an application of the package, predicting malaria incidence rate across Madagascar from aggregated count data and environmental covariates. 
+Disaggregation modelling, which involves predicting at fine-scale resolution using areal data over heterogenous regions, has become widely used in fields such as epidemiology and ecology. The \pkg{disaggregation} package implements Bayesian spatial disaggregation modelling with a simple, easy to use \proglang{R} interface. The package includes simple data preparation, fitting and prediction functions that allow some user defined model flexibility. In this paper we have presented an application of the package, predicting malaria incidence rate across Madagascar from aggregated count data and environmental covariates. 
 
 The modelling framework is implemented using the Laplace approximation and automatic differentiation within the \pkg{TMB} package. This allows fast, optimised calculations in C++. These disaggregation models are computationally intensive and take a long time using Markov Chian Monte Carlo (MCMC) optimisation techniques. Using \pkg{TMB}, the models are much faster and produce similar results 
 
-The \pkg{disaggregation} package can be extended to include spatio-temporal disaggregation models. This would require a spatio-temporal field as well as dynamic covariates. However, this would be significantly more computationally intensive. Additionally, tools for cross-validation could be included within the package. Cross-validation of spatial models is non-trivial as random cross validation over estimates the performance of the model due to spatial autocorrelation and spatial cross-validation will show good performance if your underlying model is generalisable to new geographic regions.
+The \pkg{disaggregation} package can be extended to include spatio-temporal disaggregation models. This would require a spatio-temporal field as well as dynamic covariates. However, this would be significantly more computationally intensive. Additionally, tools for cross-validation could be included within the package. Cross-validation of spatial models is non-trivial due to the spatial autocorrelation in the data. 
+
+The \pkg{disaggregation} package provides a simple, useful interface to perform spatial disaggregation modelling, with reasonable flexibility, as well as having the scope to be extended to more complex disaggregation models.
 
 
 %% -- Optional special unnumbered sections -------------------------------------
@@ -407,7 +409,7 @@ The \pkg{disaggregation} package can be extended to include spatio-temporal disa
 
 The results in this paper were obtained using
 \proglang{R}~\Sexpr{paste(R.Version()[6:7], collapse = ".")} with the
-\pkg{MASS}~\Sexpr{packageVersion("MASS")} package. \proglang{R} itself
+\pkg{TMB}~\Sexpr{packageVersion("TMB")} package. \proglang{R} itself
 and all packages used are available from the Comprehensive
 \proglang{R} Archive Network (CRAN) at
 \url{https://CRAN.R-project.org/}, apart from \pkg{INLA}, which can be 
