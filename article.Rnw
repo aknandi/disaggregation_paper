@@ -325,7 +325,7 @@ Using three simple functions we have been able to fit a Bayesian spatial disaggr
 
 In this section we show performance comparisons between modelling using this \pkg{disaggregation} package, based on \pkg{TMB}, and using Markov chain Monte Carlo (MCMC). MCMC algorithms sample the probability space to produce an esimate of the probability distribution. These algorithms tend to be slow, as it takes a long time to effectively sample the likelihood space. In contrast, the \pkg{disaggregation} package, which uses the Laplace approximation, automatic differentiation and efficient computation of sparse matrices within \pkg{TMB}, takes a considerably shorter time to optimise the model. Here we compare the time and performance of the two techniques.
 
-The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS algorithm. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took x hours. This number of iterations was chosen to be the minimum required for the value of Rhat to drop below 1.05 for all model parameters. The model is optimised using \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in the table below. 
+The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS algorithm using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations and doubling the number of iterations each time, until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. The model is optimised using \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in the table below. 
 
 %
 <<mcmc, eval=FALSE>>=
@@ -344,7 +344,7 @@ m <- fit_model(data = dis_data,
                              prior_sigma_max = 1,
                              prior_sigma_prob = 0.01))
 
-# Running the MCMC algorithm for 8 hours
+# Running the MCMC algorithm for 94 hours
 start <- Sys.time()
 mcmc_out <- tmbstan(m$obj, chains = 4, iter = 8000, warmup = 2000,
                      cores = getOption('mc.cores', 4))
@@ -364,17 +364,17 @@ The trace of the MCMC parameter values is given in Figures~\ref{fig:mcmclong}. I
 \begin{table}
 \centering
 \begin{tabular}{l|ll|ll}
- & \multicolumn{2}{|c|}{MCMC (x hours - TBC)} & \multicolumn{2}{|c}{TMB (56 seconds)} \\
+ & \multicolumn{2}{|c|}{MCMC (94 hours)} & \multicolumn{2}{|c}{TMB (56 seconds)} \\
 Parameter & Mean & SD & Mean & SD \\
 \hline
-Intercept & -3.06 & 0.42 & -3.12 & 0.27 \\
-Slope 1 & 0.17 & 0.29 & 0.24 & 0.27 \\
-Slope 2 & 0.31 & 0.22 & 0.30 & 0.21\\
-Slope 3 & -0.34 & 0.22 & -0.37 & 0.20 \\
-Slope 4 & -0.24 & 0.26 & -0.24 & 0.21 \\
-iid $log(\tau)$ & 1.11 & 0.28 & 1.10 & 0.27 \\
-$log(\sigma)$ & -3.35 & 0.60 & -3.55 & 0.59 \\
-$log(\rho)$ & 0.74 & 0.34 & -0.56 & 0.30 \\
+Intercept & -3.09 & 0.33 & -3.12 & 0.27 \\
+Slope 1 & 0.20 & 0.28 & 0.24 & 0.27 \\
+Slope 2 & 0.32 & 0.21 & 0.30 & 0.21\\
+Slope 3 & -0.36 & 0.20 & -0.37 & 0.20 \\
+Slope 4 & -0.24 & 0.23 & -0.24 & 0.21 \\
+iid $log(\tau)$ & 1.08 & 0.27 & 1.10 & 0.27 \\
+$log(\sigma)$ & -3.34 & 0.59 & -3.55 & 0.59 \\
+$log(\rho)$ & 0.72 & 0.31 & -0.56 & 0.30 \\
 \end{tabular}
 \end{table}
 %
@@ -382,8 +382,8 @@ $log(\rho)$ & 0.74 & 0.34 & -0.56 & 0.30 \\
 %
 \begin{figure}[t!]
 \centering
-\includegraphics[width=\linewidth]{figures/mcmc_long.pdf}
-\caption{Trace of the fixed effects parameters for MCMC using NUTS sampling, running the algorithm for x hours.}
+\includegraphics[width=\linewidth]{figures/mcmc_long_trace.pdf}
+\caption{Trace of the fixed effects parameters for MCMC using NUTS sampling, running the algorithm for 94 hours.}
 \label{fig:mcmclong}
 \end{figure}
 %
