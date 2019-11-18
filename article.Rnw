@@ -47,7 +47,7 @@ knitr::opts_chunk$set(
 
 %% - \Abstract{} almost as usual
 \Abstract{
-  Disaggregation modelling, or downscaling, has been used across many fields including epidemiology and ecology. These models use repsonse data agreggated of large heterogenous regions and predict the response at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \emph{disaggregation}, which provides the functionality to streamline the process of running a disaggregation model for fine scale predictions.
+  Disaggregation modelling, or downscaling, has been used across many fields including epidemiology and ecology. In these fields surveillance data, aggregated over large regions, is becoming more common, leading to an increasing demand for modelling frameworks that can deal with this data to understand spatial patterns. Disaggregation regression models use repsonse data agreggated over large heterogenous regions and predict the response at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \emph{disaggregation}, which provides the functionality to streamline the process of running a disaggregation model for fine scale predictions.
 }
 
 %% - \Keywords{} with LaTeX markup, at least one required
@@ -90,7 +90,7 @@ knitr::opts_chunk$set(
 \section{Introduction} \label{sec:intro}
 
 Methods for estimating high resolution repsonse information from models of aggregated repsonse data over large spatial regions are 
-becoming increasingly sought after in disease risk~\cite{li2012log, diggle2013spatial}, expecially in malaria mapping~\cite{sturrock2014fine, alegana2016advances}, and ecological speices distribution~\cite{keil2013downscaling, barwell2014can}. The aggreagtion of repsonse data over large 
+becoming increasingly sought after in disease risk~\cite{li2012log, diggle2013spatial}, especially in malaria mapping~\cite{sturrock2014fine, alegana2016advances}, and ecological speices distribution~\cite{keil2013downscaling, barwell2014can}. The aggreagtion of repsonse data over large 
 heterongenous regions is problematic for understanding the fine scale distribution. However, by using fine scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the agreggated area. This method has recently been applied in the latest global high-resolution maps of \emph{Plasmodium falciparum} and \emph{Plasmodium vivax} malaria~\cite{falciparum2019, vivax2019}.
 
 Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the repsonse data. Traditional spatial modelling software package, \pkg{INLA}~\cite{rue2009approximate}, has been shown to very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem. Disaggregation models can be implemented in \pkg{TMB}~\cite{tmb2016} with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models with some degree of flexibility.
@@ -108,7 +108,7 @@ Disaggregation modelling is unorthodox as the predictions are at a different sca
 
 \section{Disaggregation modelling} \label{sec:model}
 
-Let's say we have response data for $N$ polygons, which corresponds to count data for the property of interest within that polygon, $y_j$. By count data here we mean the data at the level that can be aggregated by simple addition, i.e. the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. The rate, $p_i$ is defined such that the number of cases in a pixel can be calculated by multiplying the rate by the aggregation raster. For example, in epidemiology, we may have as our response the number of people with a certain disease (case incidence). Our rate would be the incidence rate as a fraction of the population, where the aggregation raster corresponds to population. 
+Suppose we have response data for $N$ polygons, which corresponds to count data for the property of interest within that polygon, $y_j$. By count data here we mean the data at the level that can be aggregated by simple addition, i.e. the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. The rate, $p_i$, is defined such that the number of cases in a pixel can be calculated by multiplying the rate by the aggregation raster. For example, in epidemiology, we may have as our response the number of people with a certain disease (case incidence). Our rate would be the incidence rate as a fraction of the population, where the aggregation raster corresponds to population. 
 
 For the disaggregation model, we first predict the rate, $pred_i$, at pixel level:
 %
