@@ -90,7 +90,7 @@ knitr::opts_chunk$set(
 \section{Introduction} \label{sec:intro}
 
 Methods for estimating high-resolution risk maps from aggregated response data over large spatial regions are 
-becoming increasingly sought after in disease risk mapping~\cite{li2012log, diggle2013spatial}, especially in malaria mapping~\cite{sturrock2014fine, wilson2017pointless}. 
+becoming increasingly sought after in disease risk mapping~\cite{li2012log, diggle2013spatial, wilson2017pointless}, especially in malaria mapping~\cite{sturrock2014fine, sturrock2016mapping}. 
 and ecological species distribution~\cite{keil2013downscaling, barwell2014can}. The aggregation of response data over large 
 heterogenous regions is problematic for understanding the fine-scale distribution. However, by using fine-scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the agreggated area. This method has recently been applied in the latest global high-resolution maps of \emph{Plasmodium falciparum} and \emph{Plasmodium vivax} malaria~\cite{falciparum2019, vivax2019}.
 
