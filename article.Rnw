@@ -134,24 +134,24 @@ rate_j = \frac{\sum_{i \epsilon j} pred_i \times agg_i}{\sum_{i \epsilon j} agg_
 \end{equation}
 %
 
-The different likelihoods correspond to slightly different models ($y_j$ is the repsonse count data):
+The different likelihoods correspond to slightly different models ($y_j$ is the response count data):
 
 %
 \begin{itemize}
 \item {\textbf{Gaussian} ($\sigma_j$ is the dispersion of the polygon data)
 \begin{equation} \label{eq:gaussian}
-N(y_j/\sum agg_i, rate_j, \sigma_j)
+y_j \sim Normal(count_j/\sum agg_i, rate_j, \sigma_j)
 \end{equation}
 Here $\sigma_j = \sigma \sqrt{\sum agg_i^2} / \sum agg_i$, where  $\sigma$ is the dispersion of the pixel data (a parameter learnt by the model) }
 
-\item \textbf{Binomial} (For a survey in polygon j, $y_j$ is the number positive and $N_j$ is the number tested),
+\item \textbf{Binomial} (For a survey in polygon $j$, $y_j$ is the number positive cases and $N_j$ is the number tested),
 \begin{equation} \label{eq:binomial}
-Binom(y_j, N_j, rate_j)
+y_j \sim Binom(cases_j, N_j, rate_j)
 \end{equation}
 
 \item \textbf{Poisson} (predicts incidence count),
 \begin{equation} \label{eq:poisson}
-Pois(y_j, cases_j)
+y_j \sim Pois(cases_j)
 \end{equation}
 
 \end{itemize}
