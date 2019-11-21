@@ -109,7 +109,10 @@ Disaggregation modelling is unorthodox as the predictions are at a different sca
 
 \section{Disaggregation modelling} \label{sec:model}
 
-Suppose we have response data, $y_j$, for $N$ polygons, which corresponds to count data for the property of interest within that polygon. By count data here we mean the data at the level that can be aggregated by simple addition, i.e. the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. The rate, $p_i$, is defined such that the number of cases in a pixel can be calculated by multiplying the rate by the aggregation raster. For example, in epidemiology, we may have as our response the number of people with a certain disease (case incidence). Our rate would be the incidence rate as a fraction of the population, where the aggregation raster corresponds to population. 
+Suppose we have response data, $y_j$, for $N$ polygons, which corresponds to count data for the property of interest within that polygon. 
+The process that is being counted occurs in continuous space that we model as a high-resolution, square lattice for convenience.
+The data, $y_j$,  are assumed to be created by the aggregation of the counts over the polygon, i.e. the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. 
+The rate, $p_i$, is defined such that the number of cases in a pixel can be calculated by multiplying the rate by the aggregation raster. For example, in epidemiology, we may have as our response the number of people that contract a certain disease in a given period of time (case incidence). Our rate would be the incidence rate of cases per population, where the aggregation raster corresponds to population. 
 
 For the disaggregation model, we first predict the rate, $pred_i$, at pixel level:
 %
