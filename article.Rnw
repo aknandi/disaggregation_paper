@@ -157,13 +157,13 @@ y_j \sim Pois(cases_j)
 \end{itemize}
 %
 
-Note the normal likelihood is modelled in rate space as it is unreasonable to assume that the dispersion of the likelihood is the same for polygons containing different numbers of cases. Also, the binomial likelihood can be used for survey data, for example when the response data consists of the number of people who tested positive for a disease and the total number of people that were tested.
+Note the normal likelihood is modelled in rate space as it is rarely reasonable to assume that the dispersion of the normal likelihood is equal for polygons containing different numbers of cases. Also, the binomial likelihood can be used for survey data, for example when the response data consists of the number of people who tested positive for a disease and the total number of people that were tested.
 
 \subsection{Priors}
 
-For each of the model parameters we specify priors and hyperpriors. The regression parameters and intercept are given Gaussian priors, where the default priors are $\beta_0 \sim N(0, 2)$ and $\beta_i \sim N(0, 0.4)$. 
+For each of the model parameters and hyperparameters we specify priors and hyperpriors. The regression parameters and intercept are given Gaussian priors, where the default priors are $\beta_0 \sim N(0, 2)$ and $\beta_i \sim N(0, 0.4)$. 
 
-The field parameters are given penalised complexity priors, $\rho_{min}$ and $\rho_{prob}$, where $P(\rho < \rho_{min}) = \rho_{prob}$, and the variation, $\sigma_{max}$ and $\sigma_{prob}$, where $P(\sigma > \sigma_{max}) = \sigma_{prob}$. The effect of these hyperpriors is to regularise the field to have smaller variations over larger distances. Similarly for the iid effect, the priors are penalised complexity priors on the standard deviation, $sd_{max}$ and $sd_{prob}$, such that $P(sd > sd_{max}) = sd_{prob}$. This has the effect of regularising the iid effect to be small.
+The field parameters are given penalised complexity priors \cite{fuglstad2018constructing}, $\rho_{min}$ and $\rho_{prob}$, where $P(\rho < \rho_{min}) = \rho_{prob}$, and the variation, $\sigma_{max}$ and $\sigma_{prob}$, where $P(\sigma > \sigma_{max}) = \sigma_{prob}$. The effect of these hyperpriors is to regularise the field to have smaller variations over larger distances. Similarly for the iid effect, the priors are penalised complexity priors \cite{simpson2017penalising} on the standard deviation, $sd_{max}$ and $sd_{prob}$, such that $P(sd > sd_{max}) = sd_{prob}$. This has the effect of regularising the iid effect to be small.
 
 For models that use a Gaussian likelihood, a log gamma prior is set on the log of the precision, $\log\tau \sim \log\Gamma(shape = 1, rate = 5e-05)$, to regularise the dispersion ($\sigma = 1/\sqrt\tau$) to take low values. This is the same as the prior set by INLA for the dispersion of the normal likelihood.
 
