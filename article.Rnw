@@ -121,7 +121,7 @@ link(pred_i) = \beta_0 + \beta X + GP(s_i) + u_j
 \end{equation}
 %
 
-where $\beta$ are the regression coefficients, $X$ are the covariates, $GP$ is the gaussian random field and $u_j$ is the polygon-specific iid random effect. The user defined link function is given by $link$. The Gaussian random field has a Matern covariance function, with hyperparameters $\rho = \frac{\sqrt{8\lambda}}{\kappa}$, the range of the field (beyond which correlation is $<$ 0.1), and $\sigma$, the marginal standard deviation, relating the magntiude of the variation of the field. Each of the model parameters and hyperparameters are given priors, which is discussed later. 
+where $\beta$ are the regression coefficients, $X$ are the covariates, $GP$ is the gaussian random field and $u_j$ is the polygon-specific iid random effect. The user defined link function is given by $link$. The Gaussian random field has a Matern covariance function, with hyperparameters $\rho = \frac{\sqrt{8\lambda}}{\kappa}$, the range of the field (beyond which correlation is $<$ 0.1), and $\sigma$, the marginal standard deviation, relating the magntiude of the variation of the field. As we are working in a Bayesian setting, each of the model parameters and hyperparameters are given a prior, which is discussed later. 
 
 The pixel predictions are then aggregated to the polygon level using the weighted sum (via the aggregation raster, $agg_i$):
 
