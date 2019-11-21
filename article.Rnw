@@ -332,7 +332,7 @@ Using three simple functions we have been able to fit a Bayesian spatial disaggr
 
 In this section we show performance comparisons between modelling using the Laplace approximation provided by the \pkg{disaggregation} package, based on \pkg{TMB}, and using Markov chain Monte Carlo (MCMC). MCMC algorithms sample the probability space to produce an esimate of the probability distribution. These algorithms tend to be slow, as it takes a long time to effectively sample the likelihood space. In contrast, the \pkg{disaggregation} package, which uses the Laplace approximation, automatic differentiation and efficient computation of sparse matrices within \pkg{TMB}, takes a considerably shorter time to optimise the model. Here we compare the time and performance of the two techniques.
 
-The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS algorithm \cite{hoffman2014no} using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. The model is optimised using \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. 
+The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS algorithm \cite{hoffman2014no} using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. In contrast, fitting the model using the Laplace approximation via \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. 
 
 %
 <<mcmc, eval=FALSE>>=
@@ -359,9 +359,10 @@ end <- Sys.time()
 print(end - start)
 
 # Plot the trace of the parameter values for each sampling method
-stan_trace(mcmc_out, pars = c('intercept', 
-                               'slope[1]', 'slope[2]', 'slope[3]', 'slope[4]', 
-                               'iideffect_log_tau', 'log_sigma', 'log_rho'))
+stan_trace(mcmc_out, 
+           pars = c('intercept', 
+                    'slope[1]', 'slope[2]', 'slope[3]', 'slope[4]', 
+                    'iideffect_log_tau', 'log_sigma', 'log_rho'))
 @
 %
 
@@ -386,7 +387,7 @@ $log(\rho)$ & 0.72 & 0.31 & -0.56 & 0.30 \\
 \end{table}
 %
 
-The trace of the MCMC parameter values is given in Figure~\ref{fig:mcmclong}. It can be seen that the MCMC algorithm has been run for long enough to get sufficient chain mixing. The \pkg{disaggregation} package produces similar results to the MCMC algorithm, however the model fitting using the \pkg{disaggregation} package only takes 56 seconds. Therefore, it can be seen that the \pkg{disaggregation} package provides a quick and simple way to run disaggregation models, that cannot practically be done using MCMC.
+The trace of the MCMC parameter values is given in Figure~\ref{fig:mcmclong}. It can be seen that the MCMC algorithm has been run for long enough to get sufficient chain mixing. The \pkg{disaggregation} package produces similar results to the MCMC algorithm. However the model fitting using the \pkg{disaggregation} package took 56 seconds in contrast to the 94 hours taken for the MCMC run. Therefore, it can be seen that the \pkg{disaggregation} package provides a quick and simple way to run disaggregation models, that can be prohibitively slow using MCMC.
 
 %
 \begin{figure}[t!]
