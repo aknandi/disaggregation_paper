@@ -266,7 +266,7 @@ dis_data <- prepare_data(polygon_shapefile = shapes,
 We can see a summary of the data, using the generic \code{summary} function, and \code{plot} the data. The summary function returns information on how many pixels and polygons the data contains, how many pixels in the smallest and largest polygons and a summary of the covariate data. The \code{plot} functions plots a map of the polygon response data, the covariate rasters and the INLA mesh.
 
 %
-<<showdata>>=
+<<showdata, dev='png'>>=
 summary(dis_data)
 plot(dis_data)
 @
