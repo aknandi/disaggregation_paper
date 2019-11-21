@@ -225,7 +225,8 @@ api <- api[api$iso3 == 'MDG' & api$year == 2013, ]
 shapes <- shapefile(shapefile_path)
 shapes <- shapes[shapes$ID_2 %in% as.character(api$fdef_id), ]
 
-# Add incidence information to the shapefile (incidence = API * population/1000)
+# Add incidence information to the shapefile 
+# (incidence count = API * population/1000)
 indices <- match(shapes$ID_2, as.character(api$fdef_id))
 shapes$inc <- (api$api_mean_pf[indices] * api$pop_at_risk_pf[indices])/1000
 
