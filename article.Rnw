@@ -47,7 +47,7 @@ knitr::opts_chunk$set(
 
 %% - \Abstract{} almost as usual
 \Abstract{
-  Disaggregation modelling, or downscaling, has been used across many fields including epidemiology and ecology. In these fields surveillance data, aggregated over large regions, is becoming more common, leading to an increasing demand for modelling frameworks that can deal with this data to understand spatial patterns. Disaggregation regression models use repsonse data agreggated over large heterogenous regions and predict the response at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \emph{disaggregation}, which provides the functionality to streamline the process of running a disaggregation model for fine scale predictions.
+  Disaggregation modelling, or downscaling, has become an important discipline in epidemiology. Surveillance data, aggregated over large regions, is becoming more common, leading to an increasing demand for modelling frameworks that can deal with this data to understand spatial patterns. Disaggregation regression models use response data agreggated over large heterogenous regions and predict the response at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \emph{disaggregation}, which provides the functionality to streamline the process of running a disaggregation model for fine scale predictions.
 }
 
 %% - \Keywords{} with LaTeX markup, at least one required
