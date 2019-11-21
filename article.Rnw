@@ -176,7 +176,7 @@ The \pkg{disaggregation} package contains a C++ function that defines the model 
 
 \section{Package usage} \label{sec:code}
 
-In this section we show how to use the \pkg{disaggregation} package using a dataset of aggregated malaria case counts across Madagascar. Malaria is an infectious disease caused by parasites of the \emph{Plasmodium} group, transmitted by \emph{Anopheles} mosquitoes. Malaria transmission is therefore closely related to mosquito and parasite development. Environmental factors such as temperature, rainfall and elevation have been shown to have signifcant effect on mosquito survival and development; in general mosquitoes favour warm, humid environments with moderate rainfall. Therefore, such environmental covariates would be useful in a malaria disaggregation model to inform fine-scale distributions. In this model we use the environmental covariates of mean land surface temperature (LST), variation in LST, elevation, and enhanced vegetation index (EVI) to inform spatial heterogeneity in malaria risk. These covaraites are obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS), which provides many measurements over the entire Earth's surface (\url{https://modis.gsfc.nasa.gov/data/}). 
+In this section we show how to use the \pkg{disaggregation} package using a dataset of aggregated malaria case counts across Madagascar. Malaria is an infectious disease caused by parasites of the \emph{Plasmodium} group, transmitted by \emph{Anopheles} mosquitoes. Malaria transmission is therefore closely related to mosquito and parasite development. Environmental factors such as temperature, rainfall and elevation have been shown to have signifcant effect on mosquito survival and development; in general mosquitoes favour warm, humid environments with moderate rainfall. Therefore, such environmental covariates would be useful in a malaria disaggregation model to inform fine-scale distributions. In this model we use the environmental covariates of mean land surface temperature (LST), variation in LST, elevation, and enhanced vegetation index (EVI) to inform spatial heterogeneity in malaria risk. These covariates are obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS), which provides many measurements over the entire Earth's surface (\url{https://modis.gsfc.nasa.gov/data/}). 
 Malaria incidence rate is often given per thousand cases and given the term annual parasite index (API).
 
 The latest version of \pkg{disaggregation} should always be available from the Comprehensive R Archive Network (CRAN) at \href{http://CRAN.R-project.org/package=disaggregation}{http://CRAN.R-project.org/package=disaggregation}. Run the following commands to install and load the package.
@@ -274,11 +274,11 @@ plot(dis_data)
 
 The \code{prepare_data} function returns an object of class \code{disag.data}, which is designed to be used directly in the \code{fit_model} function.
 
-Now we can fit the disaggregation model using \code{fit_model}. Here we use a poisson likelihood for the incident count data with a log link function. Options for the likelihood are gaussian, poisson and binomial, and options for the link function are logit, log and identity. The spatial field and iid effect are components of the model by default, they can be turned off using the \code{field} and \code{iid} flags. We specify all of the priors for the model in a single list. Hyperpriors for the field are given as penalised complexity priors - specify $\rho_{min}$ and $\rho_{prob}$ for the range of the field, where $P(\rho < \rho_{min}) = \rho_{prob}$, and $\sigma_{min}$ and $\sigma_{prob}$ for the variation of the field, where $P(\sigma > \sigma_{min}) = \sigma_{prob}$. Similarly, you specify penalised complexity priors for the iid effect.
+Now we can fit the disaggregation model using \code{fit_model}. Here we use a Poisson likelihood for the incident count data with a log link function. Options for the likelihood are Gaussian, Poisson and binomial, and options for the link function are logit, log and identity. The spatial field and iid effect are components of the model by default, they can be turned off using the \code{field} and \code{iid} flags. We specify all of the priors for the model in a single list. Hyperpriors for the field are given as penalised complexity priors - specify $\rho_{min}$ and $\rho_{prob}$ for the range of the field, where $P(\rho < \rho_{min}) = \rho_{prob}$, and $\sigma_{min}$ and $\sigma_{prob}$ for the variation of the field, where $P(\sigma > \sigma_{min}) = \sigma_{prob}$. Similarly, you specify penalised complexity priors for the iid effect.
 The \code{iterations} argument specifies the maximum number of iterations the model can run for to find an optimal point. In order to print more verbose output you can set the \code{silent} argument to FALSE.
 
 %
-<<fit_model>>=
+<<fit_model, message = FALSE>>=
 fitted_model <- fit_model(data = dis_data,
                           iterations = 1000,
                           family = 'poisson',
@@ -304,9 +304,9 @@ plot(fitted_model)
 %
 
 The \code{fit_model} function returns an object of class \code{fit.result}, which is designed to be used directly in the \code{predict} function.
-Therefore, now once we have fitted the model, we are ready to predict the malaria incidence rate across Madagascar.
+Therefore, now we have fitted the model, we are ready to predict the malaria incidence rate across Madagascar.
 
-To predict over a different spatial extent to that used in the model, a RasterStack covering the region to make predictions over can be passed as the \code{newdata} argument. If this argument is not given, predictions are made over the covaraite data used in the fit. If the user wants to include the iid effect from the model as a component in the prediction then the \code{predict_iid} logical flag should be set to TRUE, otherwise, the iid effect will not be predicted. 
+To predict over a different spatial extent to that used in the model, a RasterStack covering the region to make predictions over can be passed as the \code{newdata} argument. If this argument is not given, predictions are made over the covariate rasters used in the fit. If the user wants to include the iid effect from the model as a component in the prediction then the \code{predict_iid} logical flag should be set to TRUE, otherwise, the iid effect will not be predicted. 
 
 For the uncertainty calculations, parameter values are sampled from the posterior distribution and summarised. The number of parameter draws used to calculate the uncertainty is set by the user via the \code{N} parameter (default: 100), and the size of the credible interval (75\%, 95\%, ...) to be calculated when summarising is set via the argument \code{CI} (default: 0.95). 
 
@@ -316,12 +316,12 @@ model_predictions <- predict(fitted_model)
 @
 %
 
-The function \code{predict} returns a list of two objects: the mean predictions (of class \code{predictions}) and the uncertainty rasters (of class \code{uncertainty}). The mean predictions contain a raster of the mean prediction of the incidence rate, as well as rasters of the field, iid (if predicted) and covariate component of the linear predictor. The uncertainty contains a RasterStack of the prediction realisations and a RasterStack of the upper and lower credible intervals. 
+The function \code{predict} returns a list of two objects: the mean predictions (of class \code{predictions}) and the uncertainty rasters (of class \code{uncertainty}). The mean predictions contain a raster of the mean prediction of the incidence rate, as well as rasters of the field, iid (if predicted) and covariate component of the linear predictor. The \code{uncertainty} object contains a RasterStack of the prediction realisations and a RasterStack of the upper and lower credible intervals. 
 
 The \code{plot} function can be used on both the \code{predictions} and \code{uncertainty} objects.
 
 %
-<<showpredictions>>=
+<<showpredictions, dev = 'png'>>=
 plot(model_predictions$mean_predictions)
 plot(model_predictions$uncertainty_predictions)
 @
