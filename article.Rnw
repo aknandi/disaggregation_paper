@@ -210,7 +210,8 @@ covariate_raster_paths <- c(
   'data/SRTM_elevation.5km.mean.tif',
   'data/MODIS_LST_Day.SD.5km.tif')
 
-# Make a RasterStack of covariates to the extent of Madagascar and scale values
+# Make a RasterStack of covariates, 
+# crop to the extent of Madagascar and scale values
 covariates <- lapply(covariate_raster_paths, raster)
 covariate_stack <- stack(covariates)
 covariate_stack <- scale(crop(covariate_stack, extent(c(42, 52, -26, -10))))
