@@ -140,7 +140,7 @@ The different likelihoods correspond to slightly different models ($y_j$ is the 
 \begin{itemize}
 \item {\textbf{Gaussian} ($\sigma_j$ is the dispersion of the polygon data)
 \begin{equation} \label{eq:gaussian}
-y_j \sim Normal(count_j/\sum agg_i, rate_j, \sigma_j)
+y_j \sim Normal(cases_j/\sum agg_i, rate_j, \sigma_j)
 \end{equation}
 Here $\sigma_j = \sigma \sqrt{\sum agg_i^2} / \sum agg_i$, where  $\sigma$ is the dispersion of the pixel data (a parameter learnt by the model) }
 
