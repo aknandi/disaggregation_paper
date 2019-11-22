@@ -380,7 +380,7 @@ Slope 3 & -0.36 & 0.20 & -0.37 & 0.20 \\
 Slope 4 & -0.24 & 0.23 & -0.24 & 0.21 \\
 iid $log(\tau)$ & 1.08 & 0.27 & 1.10 & 0.27 \\
 $log(\sigma)$ & -3.34 & 0.59 & -3.55 & 0.59 \\
-$log(\rho)$ & 0.72 & 0.31 & -0.56 & 0.30 \\
+$log(\rho)$ & 0.72 & 0.31 & 0.56 & 0.30 \\
 \end{tabular}
 \caption{Fitted model parameter values using both MCMC and using \pkg{TMB} within the \pkg{disaggregation} package.}
 \label{tab:mcmcresults}
