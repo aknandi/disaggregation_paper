@@ -47,7 +47,7 @@ knitr::opts_chunk$set(
 
 %% - \Abstract{} almost as usual
 \Abstract{
-  Disaggregation modelling, or downscaling, has been used across many fields including epidemiology and ecology. In these fields surveillance data, aggregated over large regions, is becoming more common, leading to an increasing demand for modelling frameworks that can deal with this data to understand spatial patterns. Disaggregation regression models use repsonse data agreggated over large heterogenous regions and predict the response at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \emph{disaggregation}, which provides the functionality to streamline the process of running a disaggregation model for fine scale predictions.
+  Disaggregation modelling, or downscaling, has become an important discipline in epidemiology. Surveillance data, aggregated over large regions, is becoming more common, leading to an increasing demand for modelling frameworks that can deal with this data to understand spatial patterns. Disaggregation regression models use response data aggregated over large heterogenous regions to make predictions at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \emph{disaggregation}, which provides functionality to streamline the process of running a disaggregation model for fine-scale predictions.
 }
 
 %% - \Keywords{} with LaTeX markup, at least one required
@@ -89,11 +89,12 @@ knitr::opts_chunk$set(
 
 \section{Introduction} \label{sec:intro}
 
-Methods for estimating high resolution repsonse information from models of aggregated repsonse data over large spatial regions are 
-becoming increasingly sought after in disease risk~\cite{li2012log, diggle2013spatial}, especially in malaria mapping~\cite{sturrock2014fine, alegana2016advances}, and ecological speices distribution~\cite{keil2013downscaling, barwell2014can}. The aggreagtion of repsonse data over large 
-heterongenous regions is problematic for understanding the fine scale distribution. However, by using fine scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the agreggated area. This method has recently been applied in the latest global high-resolution maps of \emph{Plasmodium falciparum} and \emph{Plasmodium vivax} malaria~\cite{falciparum2019, vivax2019}.
+Methods for estimating high-resolution risk maps from aggregated response data over large spatial regions are 
+becoming increasingly sought after in disease risk mapping~\cite{li2012log, diggle2013spatial, wilson2017pointless}, especially in malaria mapping~\cite{sturrock2014fine, sturrock2016mapping}. 
+Disaggregation regression, first applied in species distribution modelling in ecology~\cite{keil2013downscaling, barwell2014can} has now become an important method in disease risk mapping \cite{falciparum2019, vivax2019}. 
+The aggregation of response data over large heterogenous regions is problematic for making fine-scale predictions. However, by using fine-scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the agreggated area.
 
-Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the repsonse data. Traditional spatial modelling software package, \pkg{INLA}~\cite{rue2009approximate}, has been shown to very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem. Disaggregation models can be implemented in \pkg{TMB}~\cite{tmb2016} with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models with some degree of flexibility.
+Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the response data. The spatial modelling software package, \pkg{INLA}~\cite{rue2009approximate}, has been shown to very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem except in the special case of the linear link function \cite{wilson2017pointless}. Disaggregation models can be implemented in \pkg{TMB}~\cite{tmb2016} with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models at the expense of some flexibility.
 
 %% -- Manuscript ---------------------------------------------------------------
 
@@ -108,16 +109,19 @@ Disaggregation modelling is unorthodox as the predictions are at a different sca
 
 \section{Disaggregation modelling} \label{sec:model}
 
-Suppose we have response data for $N$ polygons, which corresponds to count data for the property of interest within that polygon, $y_j$. By count data here we mean the data at the level that can be aggregated by simple addition, i.e. the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. The rate, $p_i$, is defined such that the number of cases in a pixel can be calculated by multiplying the rate by the aggregation raster. For example, in epidemiology, we may have as our response the number of people with a certain disease (case incidence). Our rate would be the incidence rate as a fraction of the population, where the aggregation raster corresponds to population. 
+Suppose we have response data, $y_j$, for $N$ polygons, which corresponds to count data for the property of interest within that polygon. 
+The process that is being counted occurs in continuous space that we model as a high-resolution, square lattice for convenience.
+The data, $y_j$,  are assumed to be created by the aggregation of the counts over the polygon, i.e. the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. 
+The rate, $p_i$, is defined such that the number of cases in a pixel can be calculated by multiplying the rate by the aggregation raster. For example, in epidemiology, we may have as our response the number of people that contract a certain disease in a given period of time (case incidence). Our rate would be the incidence rate of cases per population, where the aggregation raster corresponds to population. 
 
-For the disaggregation model, we first predict the rate, $pred_i$, at pixel level:
+For the disaggregation model, we first model the rate, $pred_i$, at pixel level:
 %
 \begin{equation} \label{eq:lp}
 link(pred_i) = \beta_0 + \beta X + GP(s_i) + u_j
 \end{equation}
 %
 
-where $\beta$ are the regression coefficients, $X$ are the covariates, $GP$ is the gaussian random field and $u_j$ is the polygon-specific iid random effect. The user defined link function is given by $link$. The Gaussian random field has a Matern covariance function, with hyperparameters $\rho = \frac{\sqrt{8\lambda}}{\kappa}$, the range of the field (beyond which correlation is $<$ 0.1), and $\sigma$, the marginal standard deviation, relating the magntiude of the variation of the field. Each of the model parameters and hyperparameters are given priors, which is discussed later. 
+where $\beta$ are the regression coefficients, $X$ are the covariates, $GP$ is the gaussian random field and $u_j$ is the polygon-specific iid random effect. The user defined link function is given by $link$. The Gaussian random field has a Matern covariance function, with hyperparameters $\rho = \frac{\sqrt{8\lambda}}{\kappa}$, the range of the field (beyond which correlation is $<$ 0.1), and $\sigma$, the marginal standard deviation, relating the magntiude of the variation of the field. As we are working in a Bayesian setting, each of the model parameters and hyperparameters are given a prior, which is discussed later. 
 
 The pixel predictions are then aggregated to the polygon level using the weighted sum (via the aggregation raster, $agg_i$):
 
@@ -130,49 +134,50 @@ rate_j = \frac{\sum_{i \epsilon j} pred_i \times agg_i}{\sum_{i \epsilon j} agg_
 \end{equation}
 %
 
-The different likelihoods correspond to slightly different models ($y_j$ is the repsonse count data):
+The different likelihoods correspond to slightly different models ($y_j$ is the response count data):
 
 %
 \begin{itemize}
 \item {\textbf{Gaussian} ($\sigma_j$ is the dispersion of the polygon data)
 \begin{equation} \label{eq:gaussian}
-N(y_j/\sum agg_i, rate_j, \sigma_j)
+y_j \sim Normal(count_j/\sum agg_i, rate_j, \sigma_j)
 \end{equation}
 Here $\sigma_j = \sigma \sqrt{\sum agg_i^2} / \sum agg_i$, where  $\sigma$ is the dispersion of the pixel data (a parameter learnt by the model) }
 
-\item \textbf{Binomial} (For a survey in polygon j, $y_j$ is the number positive and $N_j$ is the number tested),
+\item \textbf{Binomial} (For a survey in polygon $j$, $y_j$ is the number positive cases and $N_j$ is the number tested),
 \begin{equation} \label{eq:binomial}
-Binom(y_j, N_j, rate_j)
+y_j \sim Binom(cases_j, N_j, rate_j)
 \end{equation}
 
 \item \textbf{Poisson} (predicts incidence count),
 \begin{equation} \label{eq:poisson}
-Pois(y_j, cases_j)
+y_j \sim Pois(cases_j)
 \end{equation}
 
 \end{itemize}
 %
 
-Note the normal likelihood is modelled in rate space as it is unreasonable to assume that the dispersion of the likelihood is the same for polygons containing different numbers of cases. Also, the binomial likelihood can be used for survey data, for example when the response data consists of the number of people who tested positive for a disease and the total number of people that were tested.
+Note the normal likelihood is modelled in rate space as it is rarely reasonable to assume that the dispersion of the normal likelihood is equal for polygons containing different numbers of cases. Also, the binomial likelihood can be used for survey data, for example when the response data consists of the number of people who tested positive for a disease and the total number of people that were tested.
 
 \subsection{Priors}
 
-For each of the model parameters we specify priors and hyperpriors. The regression parameters and intercept are given Gaussian priors, where the default priors are $\beta_0 \sim N(0, 2)$ and $\beta_i \sim N(0, 0.4)$. 
+For each of the model parameters and hyperparameters we specify priors and hyperpriors. The regression parameters and intercept are given Gaussian priors, where the default priors are $\beta_0 \sim N(0, 2)$ and $\beta_i \sim N(0, 0.4)$. 
 
-The field parameters are given penalised complexity priors, $\rho_{min}$ and $\rho_{prob}$, where $P(\rho < \rho_{min}) = \rho_{prob}$, and the variation, $\sigma_{max}$ and $\sigma_{prob}$, where $P(\sigma > \sigma_{max}) = \sigma_{prob}$. The effect of these hyperpriors is to regularise the field to have smaller variations over larger distances. Similarly for the iid effect, the priors are penalised complexity priors on the standard deviation, $sd_{max}$ and $sd_{prob}$, such that $P(sd > sd_{max}) = sd_{prob}$. This has the effect of regularising the iid effect to be small.
+The field parameters are given penalised complexity priors \cite{fuglstad2018constructing}, $\rho_{min}$ and $\rho_{prob}$, where $P(\rho < \rho_{min}) = \rho_{prob}$, and the variation, $\sigma_{max}$ and $\sigma_{prob}$, where $P(\sigma > \sigma_{max}) = \sigma_{prob}$. The effect of these hyperpriors is to regularise the field to have smaller variations over larger distances. Similarly for the iid effect, the priors are penalised complexity priors \cite{simpson2017penalising} on the standard deviation, $sd_{max}$ and $sd_{prob}$, such that $P(sd > sd_{max}) = sd_{prob}$. This has the effect of regularising the iid effect to be small.
 
 For models that use a Gaussian likelihood, a log gamma prior is set on the log of the precision, $\log\tau \sim \log\Gamma(shape = 1, rate = 5e-05)$, to regularise the dispersion ($\sigma = 1/\sqrt\tau$) to take low values. This is the same as the prior set by INLA for the dispersion of the normal likelihood.
 
 
 \section{TMB implementation} \label{sec:implementation}
 
-The \pkg{disaggregation} package is built on Template Model Builder (\pkg{TMB})~\cite{tmb2016}, which is a tool for buidling flexible complex models based on C++. \pkg{TMB} combines the packages CppAD~\cite{bell2012cppad}, for automatic differentiation in C++, Eigen~\cite{guennebaud2010eigen}, a C++ library for linear algebra, and CHOLMOD~\cite{chen2008algorithm}, a package for efficient computation of sparse matrices. The use of these packages allows an efficient implementation of the applied Laplace approximation~\cite{skaug2006automatic} with exact derivatives. \pkg{TMB} calculates first and second order derivatives of the objective function using automatic differentiation~\cite{griewank2008evaluating}.
+The \pkg{disaggregation} package is built on Template Model Builder (\pkg{TMB})~\cite{tmb2016}, which is a tool for flexibly building complex models based on C++. \pkg{TMB} combines the packages CppAD~\cite{bell2012cppad}, for automatic differentiation in C++, Eigen~\cite{guennebaud2010eigen}, a C++ library for linear algebra, and CHOLMOD~\cite{chen2008algorithm}, a package for efficient computation of sparse matrices. The use of these packages allows an efficient implementation of the automatic Laplace approximation~\cite{skaug2006automatic} with exact derivatives which gives an approximation to the Bayesian posterior. \pkg{TMB} calculates first and second order derivatives of the objective function using automatic differentiation~\cite{griewank2008evaluating}.
 
-The \pkg{disaggregation} package contains a C++ function that defines the model and computes the joint likelihood as a function of the parameters and the random effects, in the format expected by \pkg{TMB}. The \pkg{TMB} package then calculates estimates of both parameters and random effects using the Laplace approximation for the likelihood. Evaluation of the objective function and its derivatives is performed in \proglang{R}.
+The \pkg{disaggregation} package contains a C++ function that defines the model and computes the joint likelihood as a function of the parameters and the random effects, in the format expected by \pkg{TMB}. The \pkg{TMB} package then calculates estimates of both parameters and random effects using the Laplace approximation for the likelihood. Evaluation of the objective function and its derivatives is performed via \proglang{R}.
 
 \section{Package usage} \label{sec:code}
 
-In this section we show how to use the \pkg{disaggregation} package using real malaria data of aggregated malaria case counts across Madagascar. Malaria is a infectious disease caused by parasites of the \emph{Plasmodium} group, transmitted by \emph{Anopheles} mosquitoes. Malaria transmission is therefore closely related to mosquito and parasite development. Environmental factors such as temperature, rainfall and elevation have been shown to have signifcant effect on mosquito survival and development; in general mosquitoes favour warm, humid environments with moderate rainfall. Therefore, such environmental covariates would be useful in a malaria disaggregation model to inform fine-scale distributions. In this model we use the environmental covariates of mean land surface temperature (LST), variation in LST, elevation, and enhanced vegetation index (EVI) to inform spatial hetrogenity in malaria risk. These covaraites are obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS), which provides many measurements over the entire Earth's surface (\url{https://modis.gsfc.nasa.gov/data/}). 
+In this section we show how to use the \pkg{disaggregation} package using a dataset of aggregated malaria case counts across Madagascar. Malaria is an infectious disease caused by parasites of the \emph{Plasmodium} group, transmitted by \emph{Anopheles} mosquitoes. Malaria transmission is therefore closely related to mosquito and parasite development. Environmental factors such as temperature, rainfall and elevation have been shown to have signifcant effect on mosquito survival and development; in general mosquitoes favour warm, humid environments with moderate rainfall. Therefore, such environmental covariates would be useful in a malaria disaggregation model to inform fine-scale distributions. In this model we use the environmental covariates of mean land surface temperature (LST), variation in LST, elevation, and enhanced vegetation index (EVI) to inform spatial heterogeneity in malaria risk. These covariates are obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS), which provides many measurements over the entire Earth's surface (\url{https://modis.gsfc.nasa.gov/data/}). 
+Malaria incidence rate is often given per thousand cases and given the term annual parasite index (API).
 
 The latest version of \pkg{disaggregation} should always be available from the Comprehensive R Archive Network (CRAN) at \href{http://CRAN.R-project.org/package=disaggregation}{http://CRAN.R-project.org/package=disaggregation}. Run the following commands to install and load the package.
 
@@ -206,7 +211,8 @@ covariate_raster_paths <- c(
   'data/SRTM_elevation.5km.mean.tif',
   'data/MODIS_LST_Day.SD.5km.tif')
 
-# Make a RasterStack of covariates to the extent of Madagascar and scale values
+# Make a RasterStack of covariates, 
+# crop to the extent of Madagascar and scale values
 covariates <- lapply(covariate_raster_paths, raster)
 covariate_stack <- stack(covariates)
 covariate_stack <- scale(crop(covariate_stack, extent(c(42, 52, -26, -10))))
@@ -219,7 +225,8 @@ api <- api[api$iso3 == 'MDG' & api$year == 2013, ]
 shapes <- shapefile(shapefile_path)
 shapes <- shapes[shapes$ID_2 %in% as.character(api$fdef_id), ]
 
-# Add incidence information to the shapefile (incidence = API * population/1000)
+# Add incidence information to the shapefile 
+# (incidence count = API * population/1000)
 indices <- match(shapes$ID_2, as.character(api$fdef_id))
 shapes$inc <- (api$api_mean_pf[indices] * api$pop_at_risk_pf[indices])/1000
 
@@ -231,18 +238,18 @@ population_raster <- crop(population_raster, extent(c(42, 52, -26, -10)))
 
 The main functions are \code{prepare_data}, \code{fit_model} and \code{predict}.
 
-Firstly, we use the \code{prepare_data} function to setup all the data in the format needed in the disaggregation modelling. This function performs various data manipulation tasks to create objects that are required to provide for fitting the model. The required input data for the \code{prepare_data} function are a SpatialPolygonDataFrame containing the response data and a RasterStack of covariates to be used in the model. The variable names in the SpatialPolygonDataFrame of the response count data and the polygon ID are defined by the user.
+Firstly, we use the \code{prepare_data} function to setup all the data in the format needed in the disaggregation modelling. This function performs various data manipulation tasks to create objects that are necessary for fitting the model. The required input data for the \code{prepare_data} function are a SpatialPolygonsDataFrame containing the response data and a RasterStack of covariates to be used in the model. The variable names in the SpatialPolygonsDataFrame of the response count data and the polygon ID are defined by the user.
 
-An optional aggregation raster can be provided. The aggregation raster defines how the pixels within each polygon are aggregated. The disaggregation model performs a weighted sum of the pixel prediction, weighted by the pixel values in the aggregation raster. In this case our pixel predictions are malaria incidence rate, so we use the population raster to aggregate pixel incidence rate by summing the number of cases (rate weighted by population). If no aggregation raster is provided a uniform distribution is assumed, i.e. the pixel predictions are aggregated to polygon level by summing the pixel values.
+An optional aggregation raster can be provided. The aggregation raster defines how the pixels within each polygon are aggregated. The disaggregation model performs a weighted sum of the pixel prediction, weighted by the pixel values in the aggregation raster. In this case our pixel predictions are malaria incidence rate, so we use the population raster to aggregate pixel incidence rate by summing the number of cases (rate weighted by population). If no aggregation raster is provided a uniform distribution is assumed, i.e. the pixel predictions are aggregated to polygon level by summing the pixel values unaltered.
 
 The values of the covariates (as well as the aggregation raster, if given) are extracted at each pixel within the polygons and stored as a data.frame with a row for each pixel and a column for each covariate (\code{parallelExtract} function). The extraction of each covariate is performed in parallel over the number of cores defined by the argument \code{ncores}. The values extracted from the aggregation raster are returned as an array of values, one for each pixel.
 
-In order to know which pixels are contained in each polygon, a matrix is constructed that contains the start and end pixel index for each polygon (\code{getStartendindex} function). Additionally, an INLA mesh is built to use for the spatial field (\code{build_mesh} function). The \code{mesh.args} argument allows you to supply a list of INLA mesh parameters to control the mesh used for the spatial field. The mesh can take a while to construct, so if you want to prepare the data without buidling the mesh, the user can set the \code{makeMesh} flag to FALSE. However, you cannot then fit the disaggregation model without the mesh.
+In order to know which pixels (i.e. which rows) are contained in each polygon, a matrix is constructed that contains the start and end pixel index for each polygon (\code{getStartendindex} function). Additionally, an INLA mesh is built to use for the spatial field (\code{build_mesh} function). The \code{mesh.args} argument allows you to supply a list of INLA mesh parameters to control the mesh used for the spatial field. The mesh can take a while to construct, so if you want to prepare the data without buidling the mesh, the user can set the \code{makeMesh} flag to FALSE. However, you cannot then fit the disaggregation model without the mesh.
 
 If there are any NAs in the response or covariate data within the polygons the \code{prepare_data} method will return an error. This can be dealt with using the \code{na.action} flag, which is automatically off.  Ideally the NAs in the data would be dealt with by the user beforehand, however, setting na.action = TRUE will automatically deal with NAs. It removes any polygons that have NAs as a response, sets any aggregation pixels with NA to zero and sets covariate NAs pixels to the median value for the that covariate.
 
 %
-<<prepare_data>>=
+<<prepare_data, warning = FALSE>>=
 dis_data <- prepare_data(polygon_shapefile = shapes, 
                          covariate_rasters = covariate_stack, 
                          aggregation_raster = population_raster, 
@@ -259,7 +266,7 @@ dis_data <- prepare_data(polygon_shapefile = shapes,
 We can see a summary of the data, using the generic \code{summary} function, and \code{plot} the data. The summary function returns information on how many pixels and polygons the data contains, how many pixels in the smallest and largest polygons and a summary of the covariate data. The \code{plot} functions plots a map of the polygon response data, the covariate rasters and the INLA mesh.
 
 %
-<<showdata>>=
+<<showdata, dev='png'>>=
 summary(dis_data)
 plot(dis_data)
 @
@@ -267,11 +274,11 @@ plot(dis_data)
 
 The \code{prepare_data} function returns an object of class \code{disag.data}, which is designed to be used directly in the \code{fit_model} function.
 
-Now we can fit the disaggregation model using \code{fit_model}. Here we use a poisson likelihood for the incident count data with a log link function. Options for the likelihood are gaussian, poisson and binomial, and options for the link function are logit, log and identity. The spatial field and iid effect are components of the model by default, they can be turned off using the \code{field} and \code{iid} flags. We specify all of the priors for the model in a single list. Hyperpriors for the field are given as penalised complexity priors - specify $\rho_{min}$ and $\rho_{prob}$ for the range of the field, where $P(\rho < \rho_{min}) = \rho_{prob}$, and $\sigma_{min}$ and $\sigma_{prob}$ for the variation of the field, where $P(\sigma > \sigma_{min}) = \sigma_{prob}$. Similarly, you specify penalised complexity priors for the iid effect.
+Now we can fit the disaggregation model using \code{fit_model}. Here we use a Poisson likelihood for the incident count data with a log link function. Options for the likelihood are Gaussian, Poisson and binomial, and options for the link function are logit, log and identity. The spatial field and iid effect are components of the model by default, they can be turned off using the \code{field} and \code{iid} flags. We specify all of the priors for the model in a single list. Hyperpriors for the field are given as penalised complexity priors - specify $\rho_{min}$ and $\rho_{prob}$ for the range of the field, where $P(\rho < \rho_{min}) = \rho_{prob}$, and $\sigma_{min}$ and $\sigma_{prob}$ for the variation of the field, where $P(\sigma > \sigma_{min}) = \sigma_{prob}$. Similarly, you specify penalised complexity priors for the iid effect.
 The \code{iterations} argument specifies the maximum number of iterations the model can run for to find an optimal point. In order to print more verbose output you can set the \code{silent} argument to FALSE.
 
 %
-<<fit_model>>=
+<<fit_model, message = FALSE>>=
 fitted_model <- fit_model(data = dis_data,
                           iterations = 1000,
                           family = 'poisson',
@@ -297,9 +304,9 @@ plot(fitted_model)
 %
 
 The \code{fit_model} function returns an object of class \code{fit.result}, which is designed to be used directly in the \code{predict} function.
-Therefore, now once we have fitted the model, we are ready to predict the malaria incidence rate across Madagascar.
+Therefore, now we have fitted the model, we are ready to predict the malaria incidence rate across Madagascar.
 
-To predict over a different spatial extent to that used in the model, a RasterStack covering the region to make predictions over can be passed as the \code{newdata} argument. If this argument is not given, predictions are made over the covaraite data used in the fit. If the user wants to include the iid effect from the model as a component in the prediction then the \code{predict_iid} logical flag should be set to TRUE, otherwise, the iid effect will not be predicted. 
+To predict over a different spatial extent to that used in the model, a RasterStack covering the region to make predictions over can be passed as the \code{newdata} argument. If this argument is not given, predictions are made over the covariate rasters used in the fit. If the user wants to include the iid effect from the model as a component in the prediction then the \code{predict_iid} logical flag should be set to TRUE, otherwise, the iid effect will not be predicted. 
 
 For the uncertainty calculations, parameter values are sampled from the posterior distribution and summarised. The number of parameter draws used to calculate the uncertainty is set by the user via the \code{N} parameter (default: 100), and the size of the credible interval (75\%, 95\%, ...) to be calculated when summarising is set via the argument \code{CI} (default: 0.95). 
 
@@ -309,12 +316,12 @@ model_predictions <- predict(fitted_model)
 @
 %
 
-The function \code{predict} returns a list of two objects: the mean predictions (of class \code{predictions}) and the uncertainty rasters (of class \code{uncertainty}). The mean predictions contain a raster of the mean prediction of the incidence rate, as well as rasters of the field, iid (if predicted) and covariate component of the linear predictor. The uncertainty contains a RasterStack of the prediction realisations and a RasterStack of the upper and lower credible intervals. 
+The function \code{predict} returns a list of two objects: the mean predictions (of class \code{predictions}) and the uncertainty rasters (of class \code{uncertainty}). The mean predictions contain a raster of the mean prediction of the incidence rate, as well as rasters of the field, iid (if predicted) and covariate component of the linear predictor. The \code{uncertainty} object contains a RasterStack of the prediction realisations and a RasterStack of the upper and lower credible intervals. 
 
 The \code{plot} function can be used on both the \code{predictions} and \code{uncertainty} objects.
 
 %
-<<showpredictions>>=
+<<showpredictions, dev = 'png'>>=
 plot(model_predictions$mean_predictions)
 plot(model_predictions$uncertainty_predictions)
 @
@@ -323,9 +330,9 @@ Using three simple functions we have been able to fit a Bayesian spatial disaggr
 
 \section{Comparison with MCMC} \label{sec:comparison}
 
-In this section we show performance comparisons between modelling using this \pkg{disaggregation} package, based on \pkg{TMB}, and using Markov chain Monte Carlo (MCMC). MCMC algorithms sample the probability space to produce an esimate of the probability distribution. These algorithms tend to be slow, as it takes a long time to effectively sample the likelihood space. In contrast, the \pkg{disaggregation} package, which uses the Laplace approximation, automatic differentiation and efficient computation of sparse matrices within \pkg{TMB}, takes a considerably shorter time to optimise the model. Here we compare the time and performance of the two techniques.
+In this section we show performance comparisons between modelling using the Laplace approximation provided by the \pkg{disaggregation} package, based on \pkg{TMB}, and using Markov chain Monte Carlo (MCMC). MCMC algorithms sample the probability space to produce an esimate of the probability distribution. These algorithms tend to be slow, as it takes a long time to effectively sample the likelihood space. In contrast, the \pkg{disaggregation} package, which uses the Laplace approximation, automatic differentiation and efficient computation of sparse matrices within \pkg{TMB}, takes a considerably shorter time to optimise the model. Here we compare the time and performance of the two techniques.
 
-The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS algorithm using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. The model is optimised using \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. 
+The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS algorithm \cite{hoffman2014no} using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. In contrast, fitting the model using the Laplace approximation via \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. 
 
 %
 <<mcmc, eval=FALSE>>=
@@ -352,9 +359,10 @@ end <- Sys.time()
 print(end - start)
 
 # Plot the trace of the parameter values for each sampling method
-stan_trace(mcmc_out, pars = c('intercept', 
-                               'slope[1]', 'slope[2]', 'slope[3]', 'slope[4]', 
-                               'iideffect_log_tau', 'log_sigma', 'log_rho'))
+stan_trace(mcmc_out, 
+           pars = c('intercept', 
+                    'slope[1]', 'slope[2]', 'slope[3]', 'slope[4]', 
+                    'iideffect_log_tau', 'log_sigma', 'log_rho'))
 @
 %
 
@@ -379,7 +387,7 @@ $log(\rho)$ & 0.72 & 0.31 & -0.56 & 0.30 \\
 \end{table}
 %
 
-The trace of the MCMC parameter values is given in Figure~\ref{fig:mcmclong}. It can be seen that the MCMC algorithm has been run for long enough to get sufficient chain mixing. The \pkg{disaggregation} package produces similar results to the MCMC algorithm, however the model fitting using the \pkg{disaggregation} package only takes 56 seconds. Therefore, it can be seen that the \pkg{disaggregation} package provides a quick and simple way to run disaggregation models, that cannot practically be done using MCMC.
+The trace of the MCMC parameter values is given in Figure~\ref{fig:mcmclong}. It can be seen that the MCMC algorithm has been run for long enough to get sufficient chain mixing. The \pkg{disaggregation} package produces similar results to the MCMC algorithm. However the model fitting using the \pkg{disaggregation} package took 56 seconds in contrast to the 94 hours taken for the MCMC run. Therefore, it can be seen that the \pkg{disaggregation} package provides a quick and simple way to run disaggregation models, that can be prohibitively slow using MCMC.
 
 %
 \begin{figure}[t!]
@@ -394,11 +402,11 @@ The trace of the MCMC parameter values is given in Figure~\ref{fig:mcmclong}. It
 
 \section{Conclusions} \label{sec:conclusions}
 
-Disaggregation modelling, which involves predicting at fine-scale resolution using areal data over heterogenous regions, has become widely used in fields such as epidemiology and ecology. The \pkg{disaggregation} package implements Bayesian spatial disaggregation modelling with a simple, easy to use \proglang{R} interface. The package includes simple data preparation, fitting and prediction functions that allow some user defined model flexibility. In this paper we have presented an application of the package, predicting malaria incidence rate across Madagascar from aggregated count data and environmental covariates. 
+Disaggregation modelling, which involves fitting models at fine-scale resolution using areal data over heterogenous regions, has become widely used in fields such as epidemiology and ecology. The \pkg{disaggregation} package implements Bayesian spatial disaggregation modelling with a simple, easy to use \proglang{R} interface. The package includes simple data preparation, fitting and prediction functions that allow some user defined model flexibility. In this paper we have presented an application of the package, predicting malaria incidence rate across Madagascar from aggregated count data and environmental covariates. 
 
-The modelling framework is implemented using the Laplace approximation and automatic differentiation within the \pkg{TMB} package. This allows fast, optimised calculations in C++. These disaggregation models are computationally intensive and take a long time using Markov Chian Monte Carlo (MCMC) optimisation techniques. Using \pkg{TMB}, the models are much faster and produce similar results 
+The modelling framework is implemented using the Laplace approximation and automatic differentiation within the \pkg{TMB} package. This allows fast, optimised calculations in C++. These disaggregation models are computationally intensive and take a long time using Markov Chian Monte Carlo (MCMC) optimisation techniques. Using \pkg{TMB}, the models are much faster and produce similar results.
 
-The \pkg{disaggregation} package can be extended to include spatio-temporal disaggregation models. This would require a spatio-temporal field as well as dynamic covariates. However, this would be significantly more computationally intensive. Additionally, tools for cross-validation could be included within the package. Cross-validation of spatial models is non-trivial due to the spatial autocorrelation in the data. 
+Future work will entail extending the \pkg{disaggregation} package to include spatio-temporal disaggregation models. This would require a spatio-temporal field as well as dynamic covariates. However, this would be significantly more computationally intensive. Additionally, tools for cross-validation could be included within the package. Cross-validation of spatial models is non-trivial due to the spatial autocorrelation in the data. 
 
 The \pkg{disaggregation} package provides a simple, useful interface to perform spatial disaggregation modelling, with reasonable flexibility, as well as having the scope to be extended to more complex disaggregation models.
 
