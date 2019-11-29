@@ -7,5 +7,3 @@ cache/**
 example_jss/**
 figure/**
 *.swp
-data/**
-!data/README
