@@ -195,44 +195,15 @@ library(disaggregation)
 @
 %
 
-We then setup the data to use in the \pkg{disaggregation} package.
+We then read in the data to use in the \pkg{disaggregation} package.
 
 %
 <<setuppaths>>=
 library(raster)
 
-API_path <- 'data/api_subnational.csv'
-population_path <-'data/pop_at_risk_pf_2013.tif'
-shapefile_path <- 'data/admin2019_2.shp'
-
-covariate_raster_paths <- c(
-  'data/MODIS_LST_Day.mean.5km.tif',
-  'data/MODIS_EVI.mean.5km.tif',
-  'data/SRTM_elevation.5km.mean.tif',
-  'data/MODIS_LST_Day.SD.5km.tif')
-
-# Make a RasterStack of covariates, 
-# crop to the extent of Madagascar and scale values
-covariates <- lapply(covariate_raster_paths, raster)
-covariate_stack <- stack(covariates)
-covariate_stack <- scale(crop(covariate_stack, extent(c(42, 52, -26, -10))))
-
-# Read in the incidence data and only select data from Madagascar 2013
-api <- read.csv(API_path)
-api <- api[api$iso3 == 'MDG' & api$year == 2013, ]
-
-# Read in the shapefile and only keep those that contain incidence data
-shapes <- shapefile(shapefile_path)
-shapes <- shapes[shapes$ID_2 %in% as.character(api$fdef_id), ]
-
-# Add incidence information to the shapefile 
-# (incidence count = API * population/1000)
-indices <- match(shapes$ID_2, as.character(api$fdef_id))
-shapes$inc <- (api$api_mean_pf[indices] * api$pop_at_risk_pf[indices])/1000
-
-# Read in the population raster and crop it to the extent of Madagascar
-population_raster <- raster(population_path)
-population_raster <- crop(population_raster, extent(c(42, 52, -26, -10)))
+shapes <- shapefile('data/shapes/mdg_shapes.shp')
+population_raster <- raster('data/population.tif')
+covariate_stack <- getCovariateRasters('data/covariates', shape = population_raster)
 @
 %
 
