@@ -7,3 +7,4 @@ cache/**
 example_jss/**
 figure/**
 *.swp
+.Rhistory
