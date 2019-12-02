@@ -210,7 +210,8 @@ library(raster)
 
 shapes <- shapefile('data/shapes/mdg_shapes.shp')
 population_raster <- raster('data/population.tif')
-covariate_stack <- getCovariateRasters('data/covariates', shape = population_raster)
+covariate_stack <- getCovariateRasters('data/covariates', 
+                                       shape = population_raster)
 @
 %
 
