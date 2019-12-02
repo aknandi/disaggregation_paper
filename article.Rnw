@@ -136,18 +136,19 @@ The different likelihoods correspond to slightly different models ($y_i$ is the 
 
 %
 \begin{itemize}
-\item {\textbf{Gaussian} ($\sigma_i$ is the dispersion of the polygon data)
+\item {\textbf{Gaussian}
 \begin{equation} \label{eq:gaussian}
 y_i \sim \textrm{Normal}(\textrm{cases}_i, \sigma_i)
 \end{equation}
 Here $\sigma_i = \sigma \sqrt{\sum_j a_{ij}^2}$, where  $\sigma$ is the pixel-level dispersion (a parameter learnt by the model) }
 
-\item \textbf{Binomial} (For a survey in polygon $i$, $y_i$ is the number positive cases and $M_i$ is the number tested),
+\item \textbf{Binomial}
 \begin{equation} \label{eq:binomial}
 y_i \sim \textrm{Binomial}(M_i, \textrm{rate}_i)
 \end{equation}
+For a survey in polygon $i$, $y_i$ is the number positive cases and $M_i$ is the number tested.
 
-\item \textbf{Poisson} (predicts incidence count),
+\item \textbf{Poisson}
 \begin{equation} \label{eq:poisson}
 y_i \sim \textrm{Pois}(\textrm{cases}_i)
 \end{equation}
