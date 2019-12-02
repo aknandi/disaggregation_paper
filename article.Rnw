@@ -165,7 +165,11 @@ For each of the model parameters and hyperparameters we specify priors. The regr
     P(\rho < \rho_{min}) &= \rho_{prob} \\
     P(\sigma > \sigma_{max}) &= \sigma_{prob}
 \end{align}
-where the values $\rho_{min}, \,\rho_{prob}, \,\sigma_{max}, \,\sigma_{prob}$ are set by the user. This prior shrinks the field towards a base model with zero variance and infinite range, in other words regularising towards a flatter field with smaller magnitude. The polygon-specific effects $u_1,...,u_N$ have Gaussian priors centered at 0 with standard deviation $u_{sd}$. A penalised complexity prior \cite{simpson2017penalising} such that $P(u_{sd} > sd_{max}) = sd_{prob}$ which shrinks towards a base model of no polygon-specific effect. The $sd_{max}$ and $sd_{prob}$ are set by the user.
+where the values $\rho_{min}, \,\rho_{prob}, \,\sigma_{max}, \,\sigma_{prob}$ are set by the user. This prior shrinks the field towards a base model with zero variance and infinite range, in other words regularising towards a flatter field with smaller magnitude. The polygon-specific effects $u_1,...,u_N$ have Gaussian priors centered at 0 with standard deviation $\sigma_{u}$ (where the precision $\tau_{u} = 1/\sigma_{u}^2$). A penalised complexity prior \cite{simpson2017penalising} such that 
+\begin{equation}
+P(\sigma_{u} > \sigma_{u, max}) = \sigma_{u, prob}
+\end{equation}
+which shrinks towards a base model of no polygon-specific effect. The $\sigma_{u, max}$ and $\sigma_{u, prob}$ are set by the user.
 
 For models that use a Gaussian likelihood, a log gamma prior is set on the log of the precision, $\log\tau \sim \log\Gamma(shape = 1, rate = 5e-05)$, to regularise the dispersion ($\sigma = 1/\sqrt\tau$) to take low values. This is the same as the prior set by INLA for the dispersion of the normal likelihood.
 
@@ -352,7 +356,7 @@ Slope 1 & 0.20 & 0.28 & 0.24 & 0.27 \\
 Slope 2 & 0.32 & 0.21 & 0.30 & 0.21\\
 Slope 3 & -0.36 & 0.20 & -0.37 & 0.20 \\
 Slope 4 & -0.24 & 0.23 & -0.24 & 0.21 \\
-iid $log(\tau)$ & 1.08 & 0.27 & 1.10 & 0.27 \\
+$log(\tau_u)$ & 1.08 & 0.27 & 1.10 & 0.27 \\
 $log(\sigma)$ & -3.34 & 0.59 & -3.55 & 0.59 \\
 $log(\rho)$ & 0.72 & 0.31 & 0.56 & 0.30 \\
 \end{tabular}
