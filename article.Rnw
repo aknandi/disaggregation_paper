@@ -115,13 +115,13 @@ The process that is being counted occurs in continuous space that we model as a 
 The data, $y_i$,  are assumed to be created by the aggregation of the counts over the polygon, i.e. the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. 
 The rate is defined such that the number of cases in this pixel can be calculated by multiplying the rate by the aggregation raster. For example, in epidemiology, we may have as our response the number of people that contract a certain disease in a given period of time (case incidence). Our rate would be the incidence rate of cases per population, where the aggregation raster corresponds to population. 
 
-For the disaggregation model, we first model the rate at pixel level, with the rate in pixel $j$ of polygon $i$ given by:
+For the disaggregation model we model the rate at pixel level, with the likelihood for then observed data then given by aggregating these pixel level rates. The rate in pixel $j$ of polygon $i$ at location $s_{ij}$ is given by:
 %
 \begin{equation} \label{eq:lp}
 \textrm{link}(\textrm{rate}_{ij}) = \beta_0 + \beta X_{ij} + \textrm{GP}(s_{ij}) + u_i 
 \end{equation}
 %
-Here $\beta$ are regression coefficients, $X_{ij}$ are covariate values, GP is a Gaussian random field and $u_i$ is a polygon-specific effect. The user defined link function is typically log, identity and logit for Poisson, Normal and Binomial likelihoods, respectively  The Gaussian random field has a Matern covariance function parameterised by $\rho$, the range (approximately the distance beyond which correlation is less than 0.1), and $\sigma$, the marginal standard deviation. As we are working in a Bayesian setting, each of the model parameters and hyperparameters are given a prior, which is discussed later. 
+where $\beta$ are regression coefficients, $X_{ij}$ are covariate values, GP is a Gaussian random field and $u_i$ is a polygon-specific effect. The user defined link function is typically log, identity and logit for Poisson, Normal and Binomial likelihoods, respectively  The Gaussian random field has a Matern covariance function parameterised by $\rho$, the range (approximately the distance beyond which correlation is less than 0.1), and $\sigma$, the marginal standard deviation. As we are working in a Bayesian setting, each of the model parameters and hyperparameters are given a prior, which is discussed later. 
 
 The pixel predictions are then aggregated to the polygon level using the weighted sum (via the aggregation raster $a_{ij}$):
 
@@ -137,6 +137,11 @@ The different likelihoods correspond to slightly different models ($y_i$ is the 
 
 %
 \begin{itemize}
+\item \textbf{Poisson}
+\begin{equation} \label{eq:poisson}
+y_i \sim \textrm{Pois}(\textrm{cases}_i)
+\end{equation}
+
 \item {\textbf{Gaussian}
 \begin{equation} \label{eq:gaussian}
 y_i \sim \textrm{Normal}(\textrm{cases}_i, \sigma_i)
@@ -147,17 +152,10 @@ Here $\sigma_i = \sigma \sqrt{\sum_j a_{ij}^2}$, where  $\sigma$ is the pixel-le
 \begin{equation} \label{eq:binomial}
 y_i \sim \textrm{Binomial}(M_i, \textrm{rate}_i)
 \end{equation}
-For a survey in polygon $i$, $y_i$ is the number positive cases and $M_i$ is the number tested.
-
-\item \textbf{Poisson}
-\begin{equation} \label{eq:poisson}
-y_i \sim \textrm{Pois}(\textrm{cases}_i)
-\end{equation}
 
 \end{itemize}
 %
-
-Note the normal likelihood is modelled in rate space as it is rarely reasonable to assume that the dispersion of the normal likelihood is equal for polygons containing different numbers of cases. Also, the binomial likelihood can be used for survey data, for example when the response data consists of the number of people who tested positive for a disease and the total number of people that were tested.
+In the example of disease mapping, Poisson or Gaussian likelihoods could be used when the quantity observed, $y_i$, is the total number of cases in a given polygon. The Binomial model could be used when $y_i$ is the prevalence of a disease in a sample of $M_i$ people in the polygon.
 
 \subsection{Priors}
 
