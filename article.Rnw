@@ -170,7 +170,7 @@ P(\sigma_{u} > \sigma_{u, max}) = \sigma_{u, prob}
 \end{equation}
 which shrinks towards a base model of no polygon-specific effect. The $\sigma_{u, max}$ and $\sigma_{u, prob}$ are set by the user.
 
-For models that use a Gaussian likelihood, a log gamma prior is set on the log of the precision, $\log\tau \sim \log\Gamma(\text{shape} = 1, \text{rate} = 5e-05)$, to regularise the dispersion ($\sigma = 1/\sqrt\tau$) to take low values. This is the same as the prior set by INLA for the dispersion of the normal likelihood.
+For models that use a Gaussian likelihood, a log gamma prior is set on the log of the precision, $\log\tau \sim \log\Gamma(\text{shape} = 1, \text{rate} = 5 \times 10^{-5})$, to regularise the dispersion ($\sigma = 1/\sqrt\tau$) to take low values. This is the same as the prior set by INLA for the dispersion of the normal likelihood.
 
 
 
