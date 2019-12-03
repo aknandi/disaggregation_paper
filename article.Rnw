@@ -37,7 +37,7 @@ knitr::opts_chunk$set(
    \And Rohan Arambepola\\University of Oxford
    \AND Peter Gething\\Telethon Kids Institute \\ Curtin University
    \And Daniel J Weiss\\University of Oxford}
-\Plainauthor{Anita K Nandi, Tim CD Lucas, Rohan Arambepola, Andre Python, Daniel J Weiss}
+\Plainauthor{Anita K Nandi, Tim CD Lucas, Rohan Arambepola, Peter Gething, Daniel J Weiss}
 
 %% - \title{} in title case
 %% - \Plaintitle{} without LaTeX markup (if any)
