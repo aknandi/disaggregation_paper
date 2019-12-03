@@ -204,7 +204,7 @@ library(disaggregation)
 We then read in the data to use in the \pkg{disaggregation} package.
 
 %
-<<setuppaths, results='hide'>>=
+<<setuppaths, results='hide', show='hide'>>=
 library(raster)
 
 shapes <- shapefile('data/shapes/mdg_shapes.shp')
