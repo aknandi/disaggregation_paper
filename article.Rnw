@@ -194,6 +194,7 @@ The latest version of \pkg{disaggregation} should always be available from the C
 <<installrun, echo=FALSE, message=FALSE>>=
 #devtools::install_github("aknandi/disaggregation")
 library(disaggregation, quietly = TRUE)
+library(raster, quietly = TRUE)
 @
 %
 
