@@ -118,13 +118,13 @@ The process that is being counted occurs in continuous space that we model as a 
 The data, $y_i$,  are assumed to be created by the aggregation of the counts over the polygon, i.e. the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. 
 The rate is defined such that the number of cases in this pixel can be calculated by multiplying the rate by the aggregation raster. For example, in epidemiology, we may have as our response the number of people that contract a certain disease in a given period of time (case incidence). Our rate would be the incidence rate of cases per population, where the aggregation raster corresponds to population. 
 
-For the disaggregation model we model the rate at pixel level, with the likelihood for then observed data then given by aggregating these pixel level rates. The rate in pixel $j$ of polygon $i$ at location $s_{ij}$ is given by:
+For the disaggregation model we model the rate at pixel level, with the likelihood for the observed data given by aggregating these pixel level rates. The rate in pixel $j$ of polygon $i$ at location $s_{ij}$ is given by:
 %
 \begin{equation} \label{eq:lp}
 \textrm{link}(\textrm{rate}_{ij}) = \beta_0 + \beta X_{ij} + \textrm{GP}(s_{ij}) + u_i 
 \end{equation}
 %
-where $\beta$ are regression coefficients, $X_{ij}$ are covariate values, GP is a Gaussian random field and $u_i$ is a polygon-specific iid effect. The user defined link function is typically log, identity and logit for Poisson, Normal and Binomial likelihoods, respectively  The Gaussian random field has a Matern covariance function parameterised by $\rho$, the range (approximately the distance beyond which correlation is less than 0.1), and $\sigma$, the marginal standard deviation. As we are working in a Bayesian setting, each of the model parameters and hyperparameters are given a prior, which is discussed later. 
+where $\beta$ are regression coefficients, $X_{ij}$ are covariate values, GP is a Gaussian random field and $u_i$ is a polygon-specific iid effect. The user-defined link function is typically log, identity and logit for Poisson, Normal and Binomial likelihoods, respectively.  The Gaussian random field has a Matern covariance function parameterised by $\rho$, the range (approximately the distance beyond which correlation is less than 0.1), and $\sigma$, the marginal standard deviation. As we are working in a Bayesian setting, each of the model parameters and hyperparameters are given a prior, which is discussed later. 
 
 The pixel predictions are then aggregated to the polygon level using the weighted sum (via the aggregation raster $a_{ij}$):
 
@@ -225,9 +225,9 @@ An optional aggregation raster can be provided. The aggregation raster defines h
 
 The values of the covariates (as well as the aggregation raster, if given) are extracted at each pixel within the polygons and stored as a data.frame with a row for each pixel and a column for each covariate (\code{parallelExtract} function). The extraction of each covariate is performed in parallel over the number of cores defined by the argument \code{ncores}. The values extracted from the aggregation raster are returned as an array of values, one for each pixel.
 
-In order to know which pixels (i.e. which rows) are contained in each polygon, a matrix is constructed that contains the start and end pixel index for each polygon (\code{getStartendindex} function). Additionally, an INLA mesh is built to use for the spatial field (\code{build_mesh} function). The \code{mesh.args} argument allows the user to supply a list of INLA mesh parameters to control the mesh used for the spatial field. The mesh can take a while to construct, so to prepare the data without buidling the mesh the user can set the \code{makeMesh} flag to FALSE. However, it would then not be possible to fit the disaggregation model without the mesh.
+In order to know which pixels (i.e. which rows) are contained in each polygon, a matrix is constructed that contains the start and end pixel index for each polygon (\code{getStartendindex} function). Additionally, an INLA mesh is built to use for the spatial field (\code{build_mesh} function). The \code{mesh.args} argument allows the user to supply a list of INLA mesh parameters to control the mesh used for the spatial field. The mesh can take several minutes to construct, so to prepare the data without buidling the mesh the user can set the \code{makeMesh} flag to FALSE. However, it would then not be possible to fit the disaggregation model without the mesh.
 
-If there are any NAs in the response or covariate data within the polygons the \code{prepare_data} method will return an error. This can be dealt with using the \code{na.action} flag, which is automatically off.  Ideally the NAs in the data would be dealt with by the user beforehand, however, setting na.action = TRUE will automatically deal with NAs. It removes any polygons that have NAs as a response, sets any aggregation pixels with NA to zero and sets covariate NAs pixels to the median value for the that covariate.
+If there are any NAs in the response or covariate data within the polygons the \code{prepare_data} method will return an error. This can be dealt with using the \code{na.action} flag, which is automatically off.  Ideally the NAs in the data would be dealt with by the user beforehand, however, setting na.action = TRUE will automatically deal with NAs. It removes any polygons that have NAs as a response, sets any aggregation pixels with NA to zero and sets covariate NAs pixels to the median value for that covariate across all polygons.
 
 %
 <<prepare_data, warning = FALSE>>=
@@ -265,7 +265,7 @@ data_plots <- plot(dis_data)
 %
 
 %
-<<subplotdata, fig.cap='Maps of Madagascar showing the data used in the disaggregation model. These plots are produced when calling the plot function on the disag.data object.', fig.subcap=c('Number of malaria cases in each administrative unit', 'Maps of the four covariates used in the model', 'inla.mesh object that will be used to make the spatial field'), out.width='0.5\\linewidth', echo=FALSE, fig.ncol = 2, dev = 'png', fig.width = 4, fig.height = 5, fig.pos = 'H'>>=
+<<subplotdata, fig.cap='Maps of Madagascar showing the data used in the disaggregation model. These plots are produced when calling the plot function on the disag.data object. The plots show: (a) number of malaria cases in each administrative unit, (b) maps of the four covariates used in the model; and (c) inla.mesh object that will be used to make the spatial field.', fig.subcap=c('', '', ''), out.width='0.5\\linewidth', echo=FALSE, fig.ncol = 2, dev = 'png', fig.width = 4, fig.height = 5, fig.pos = 'H'>>=
 data_plots$polygon
 data_plots$covariates
 INLA::plot.inla.mesh(dis_data$mesh, main = 'INLA mesh for spatial field')
@@ -305,7 +305,7 @@ summary(fitted_model)
 \begin{figure}[!h]
 \centering
 %
-<<plotmodel, fig.width = 10, fig.height = 6>>=
+<<plotmodel, fig.width = 13, fig.height = 6>>=
 plot(fitted_model)
 @
 %
@@ -313,7 +313,7 @@ plot(fitted_model)
 \end{figure}
 
 The \code{fit_model} function returns an object of class \code{fit.result}, which is designed to be used directly in the \code{predict} function.
-Therefore, now we have fitted the model, we are ready to predict the malaria incidence rate across Madagascar.
+Therefore, now that we have fitted the model, we are ready to predict the malaria incidence rate across Madagascar.
 
 To predict over a different spatial extent to that used in the model, a RasterStack covering the region to make predictions over can be passed as the \code{newdata} argument. If this argument is not given, predictions are made over the covariate rasters used in the fit. If the user wants to include the iid effect from the model as a component in the prediction then the \code{predict_iid} logical flag should be set to TRUE, otherwise, the iid effect will not be predicted. 
 
@@ -342,7 +342,7 @@ mean_predictions <- plot(model_predictions$mean_predictions)
 %
 
 %
-<<subpredictmean, fig.cap='Maps of Madagascar showing the fine-scale predictions from the disaggregation model. These maps are produced when calling the plot function on the predictions object. The maps show the (a) mean prediction of malaria incidence rate, (b) covariate contribution to the linear predictor, and (c) field contribution to the linear predictor', fig.subcap=c('', '', ''), out.width='0.33\\linewidth', echo=FALSE, dev = 'png', fig.width = 4, fig.height = 6, fig.pos = 'H'>>=
+<<subpredictmean, fig.cap='Maps of Madagascar showing the fine-scale predictions from the disaggregation model. These maps are produced when calling the plot function on the predictions object. The maps show the (a) mean prediction of malaria incidence rate, (b) covariate contribution to the linear predictor, and (c) field contribution to the linear predictor.', fig.subcap=c('', '', ''), out.width='0.33\\linewidth', echo=FALSE, dev = 'png', fig.width = 4, fig.height = 6, fig.pos = 'H'>>=
 mean_predictions$mean
 mean_predictions$covariates
 mean_predictions$field
@@ -436,7 +436,7 @@ The trace of the MCMC parameter values is given in Figure~\ref{fig:mcmclong}. It
 
 \section{Conclusions} \label{sec:conclusions}
 
-Disaggregation modelling, which involves fitting models at fine-scale resolution using areal data over heterogenous regions, has become widely used in fields such as epidemiology and ecology. The \pkg{disaggregation} package implements Bayesian spatial disaggregation modelling with a simple, easy to use \proglang{R} interface. The package includes simple data preparation, fitting and prediction functions that allow some user defined model flexibility. In this paper we have presented an application of the package, predicting malaria incidence rate across Madagascar from aggregated count data and environmental covariates. 
+Disaggregation modelling, which involves fitting models at fine-scale resolution using areal data over heterogenous regions, has become widely used in fields such as epidemiology and ecology. The \pkg{disaggregation} package implements Bayesian spatial disaggregation modelling with a simple, easy to use \proglang{R} interface. The package includes simple data preparation, fitting and prediction functions that allow some user-defined model flexibility. In this paper we have presented an application of the package, predicting malaria incidence rate across Madagascar from aggregated count data and environmental covariates. 
 
 The modelling framework is implemented using the Laplace approximation and automatic differentiation within the \pkg{TMB} package. This allows fast, optimised calculations in C++. These disaggregation models are computationally intensive and take a long time using MCMC optimisation techniques. Using \pkg{TMB}, the models are much faster and produce similar results.
 
