@@ -98,7 +98,7 @@ becoming increasingly sought after in disease risk mapping~\citep{li2012log, dig
 Disaggregation regression, first applied in species distribution modelling in ecology~\citep{keil2013downscaling, barwell2014can} has now become an important method in disease risk mapping \citep{falciparum2019, vivax2019}. 
 The aggregation of response data over large heterogenous regions is problematic for making fine-scale predictions, as relationships learned between variables at one spatial scale may not hold at other scales \citep{wakefield2006health}. However, by using fine-scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the aggregated area.
 
-Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the response data. The spatial modelling software package, \pkg{INLA}~\citep{rue2009approximate} (integrated nested Laplace approximation), has been shown to very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem except in the special case of the linear link function \citep{wilson2017pointless}. Disaggregation models can be implemented in \pkg{TMB}~\citep{tmb2016} (template model builder) with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models at the expense of some flexibility.
+Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the response data. The spatial modelling software package, \pkg{INLA}~\citep{rue2009approximate}, or integrated nested Laplace approximation, has been shown to very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem except in the special case of the linear link function \citep{wilson2017pointless}. Disaggregation models can be implemented in \pkg{TMB}~\citep{tmb2016}, or template model builder, with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models at the expense of some flexibility.
 
 %% -- Manuscript ---------------------------------------------------------------
 
@@ -167,7 +167,7 @@ For each of the model parameters and hyperparameters we specify priors. The regr
     P(\rho < \rho_{min}) &= \rho_{prob} \\
     P(\sigma > \sigma_{max}) &= \sigma_{prob}
 \end{align}
-where the values $\rho_{min}, \,\rho_{prob}, \,\sigma_{max}, \,\sigma_{prob}$ are set by the user. This prior shrinks the field towards a base model with zero variance and infinite range, in other words regularising towards a flatter field with smaller magnitude. The polygon-specific effects $u_1,...,u_N$ have Gaussian priors centered at 0 with standard deviation $\sigma_{u}$ (where the precision $\tau_{u} = 1/\sigma_{u}^2$). A penalised complexity prior \citep{simpson2017penalising} such that 
+where the values $\rho_{min}, \,\rho_{prob}, \,\sigma_{max}, \,\sigma_{prob}$ are set by the user. This prior shrinks the field towards a base model with zero variance and infinite range, in other words regularising towards a flatter field with smaller magnitude. The polygon-specific effects $u_1,...,u_N$ have Gaussian priors centered at 0 with standard deviation $\sigma_{u}$ (where the precision $\tau_{u} = 1/\sigma_{u}^2$). A penalised complexity prior \citep{simpson2017penalising} is placed on $\sigma_{u}$ such that 
 \begin{equation}
 P(\sigma_{u} > \sigma_{u, max}) = \sigma_{u, prob}
 \end{equation}
@@ -318,7 +318,7 @@ Therefore, now that we have fitted the model, we are ready to predict the malari
 
 To predict over a different spatial extent to that used in the model, a RasterStack covering the region to make predictions over can be passed as the \code{newdata} argument. If this argument is not given, predictions are made over the covariate rasters used in the fit. If the user wants to include the iid effect from the model as a component in the prediction then the \code{predict_iid} logical flag should be set to TRUE, otherwise, the iid effect will not be predicted. 
 
-For the uncertainty calculations, parameter values are sampled from the posterior distribution and summarised. The number of parameter draws used to calculate the uncertainty is set by the user via the \code{N} parameter (default: 100), and the size of the credible interval (75\%, 95\%, ...) to be calculated when summarising is set via the argument \code{CI} (default: 0.95). 
+For the uncertainty calculations, parameter values are sampled from the posterior distribution and summarised. The number of parameter draws used to calculate the uncertainty is set by the user via the \code{N} parameter (default: 100), and the size of the credible interval (e.g. 75\%, 95\%) to be calculated when summarising is set via the argument \code{CI} (default: 0.95). 
 
 %
 <<predict_model>>=
@@ -365,7 +365,7 @@ Using three simple functions within the \pkg{disaggregation} package we have bee
 \newpage
 \section{Comparison with Markov chain Monte Carlo (MCMC)} \label{sec:comparison}
 
-In this section we show performance comparisons between modelling using the Laplace approximation provided by the \pkg{disaggregation} package, based on \pkg{TMB}, and using MCMC. Given a function to evaluate the probability density of a distribution at any given point in parameter space, MCMC algorithms construct markov chains to generate samples from this distribution. These algorithms are often slow, particularly in high-dimensional settings, as it can take a long time to converge to and effectively sample from the stationary distribution. The density is evaluated at each step, so this problem is compounded when evaluating this density is computationally expensive. In contrast, the \pkg{disaggregation} package approximates uses a Laplace approximation to the posterior to generate posterior samples. This only requires the posterior to be maximised to find the posterior mode and therefore involves relatively few evaluations of the posterior density compared to MCMC techniques, although potentially at the expense of less accurate posterior samples. Here we compare the time and performance of the two techniques.
+In this section we show performance comparisons between modelling using the Laplace approximation provided by the \pkg{disaggregation} package, based on \pkg{TMB}, and using MCMC. Given a function to evaluate the probability density of a distribution at any given point in parameter space, MCMC algorithms construct markov chains to generate samples from this distribution. These algorithms are often slow, particularly in high-dimensional settings, as it can take a long time to converge to and effectively sample from the stationary distribution. The density is evaluated at each step, so this problem is compounded when evaluating this density is computationally expensive. In contrast, the \pkg{disaggregation} package approximates using a Laplace approximation to the posterior to generate posterior samples. This only requires the posterior to be maximised to find the posterior mode and therefore involves relatively few evaluations of the posterior density compared to MCMC techniques, although potentially at the expense of less accurate posterior samples. Here we compare the time and performance of the two techniques.
 
 The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS (no-u-turn sampler) algorithm \citep{hoffman2014no} using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. In contrast, fitting the model using the Laplace approximation via \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. 
 
@@ -373,23 +373,23 @@ The model described in Section~\ref{sec:code} for malaria in Madagascar has been
 <<mcmc, eval=FALSE>>=
 library(tmbstan)
 
-m <- fit_model(data = dis_data, 
-               iterations = 1,
-               family = 'poisson', 
-               link = 'log',
-               priors = list(priormean_intercept = 0,
-                             priorsd_intercept = 2,
-                             priormean_slope = 0.0,
-                             priorsd_slope = 0.4,
-                             prior_rho_min = 3,
-                             prior_rho_prob = 0.01,
-                             prior_sigma_max = 1,
-                             prior_sigma_prob = 0.01))
+tmb_model <- fit_model(data = dis_data, 
+                       iterations = 1,
+                       family = 'poisson', 
+                       link = 'log',
+                       priors = list(priormean_intercept = 0,
+                                     priorsd_intercept = 2,
+                                     priormean_slope = 0.0,
+                                     priorsd_slope = 0.4,
+                                     prior_rho_min = 3,
+                                     prior_rho_prob = 0.01,
+                                     prior_sigma_max = 1,
+                                     prior_sigma_prob = 0.01))
 
 # Running the MCMC algorithm for 94 hours
 start <- Sys.time()
-mcmc_out <- tmbstan(m$obj, chains = 4, iter = 8000, warmup = 2000,
-                     cores = getOption('mc.cores', 4))
+mcmc_out <- tmbstan(tmb_model$obj, chains = 4, iter = 8000, warmup = 2000,
+                    cores = getOption('mc.cores', 4))
 end <- Sys.time()
 print(end - start)
 
