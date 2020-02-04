@@ -28,13 +28,6 @@ knitr::opts_chunk$set(
 @
 %
 
-
-%% -- Article metainformation (author, title, ...) -----------------------------
-
-%% - \author{} with primary affiliation
-%% - \Plainauthor{} without affiliations
-%% - Separate authors by \And or \AND (in \author) or by comma (in \Plainauthor).
-%% - \AND starts a new line, \And does not.
 \author{Anita K Nandi\\University of Oxford
    \And Tim CD Lucas\\University of Oxford
    \And Rohan Arambepola\\University of Oxford
@@ -42,29 +35,17 @@ knitr::opts_chunk$set(
    \And Daniel J Weiss\\University of Oxford}
 \Plainauthor{Anita K Nandi, Tim CD Lucas, Rohan Arambepola, Peter Gething, Daniel J Weiss}
 
-%% - \title{} in title case
-%% - \Plaintitle{} without LaTeX markup (if any)
-%% - \Shorttitle{} with LaTeX markup (if any), used as running title
 \title{disaggregation: An \proglang{R} Package for Bayesian Spatial Disaggregation Modelling}
 \Plaintitle{disaggregation: An R Package for Bayesian Spatial Disaggregation Modelling}
 \Shorttitle{Disaggregation Modelling in \proglang{R}}
 
-%% - \Abstract{} almost as usual
 \Abstract{
   Disaggregation modelling, or downscaling, has become an important discipline in epidemiology. Surveillance data, aggregated over large regions, is becoming more common, leading to an increasing demand for modelling frameworks that can deal with this data to understand spatial patterns. Disaggregation regression models use response data aggregated over large heterogenous regions to make predictions at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \emph{disaggregation}, which provides functionality to streamline the process of running a disaggregation model for fine-scale predictions.
 }
 
-%% - \Keywords{} with LaTeX markup, at least one required
-%% - \Plainkeywords{} without LaTeX markup (if necessary)
-%% - Should be comma-separated and in sentence case.
 \Keywords{Bayesian spatial modelling, disaggregation modelling, TMB}
 \Plainkeywords{Bayesian spatial modelling, disaggregation modelling, TMB}
 
-%% - \Address{} of at least one author
-%% - May contain multiple affiliations for each author
-%%   (in extra lines, separated by \emph{and}\\).
-%% - May contain multiple authors for the same affiliation
-%%   (in the same first line, separated by comma).
 \Address{
   Anita Nandi\\
   Malaria Atlas Project\\
@@ -77,20 +58,6 @@ knitr::opts_chunk$set(
 
 \begin{document}
 
-
-%% -- Introduction -------------------------------------------------------------
-
-%% - In principle "as usual".
-%% - But should typically have some discussion of both _software_ and _methods_.
-%% - Use \proglang{}, \pkg{}, and \code{} markup throughout the manuscript.
-%% - If such markup is in (sub)section titles, a plain text version has to be
-%%   added as well.
-%% - All software mentioned should be properly \cite-d.
-%% - All abbreviations should be introduced.
-%% - Unless the expansions of abbreviations are proper names (like "Journal
-%%   of Statistical Software" above) they should be in sentence case (like
-%%   "generalized linear models" below).
-
 \section{Introduction} \label{sec:intro}
 
 Methods for estimating high-resolution risk maps from aggregated response data over large spatial regions are 
@@ -99,17 +66,6 @@ Disaggregation regression, first applied in species distribution modelling in ec
 The aggregation of response data over large heterogenous regions is problematic for making fine-scale predictions, as relationships learned between variables at one spatial scale may not hold at other scales \citep{wakefield2006health}. However, by using fine-scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the aggregated area.
 
 Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the response data. The spatial modelling software package, \pkg{INLA}~\citep{rue2009approximate}, or integrated nested Laplace approximation, has been shown to very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem except in the special case of the linear link function \citep{wilson2017pointless}. Disaggregation models can be implemented in \pkg{TMB}~\citep{tmb2016}, or template model builder, with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models at the expense of some flexibility.
-
-%% -- Manuscript ---------------------------------------------------------------
-
-%% - In principle "as usual" again.
-%% - When using equations (e.g., {equation}, {eqnarray}, {align}, etc.
-%%   avoid empty lines before and after the equation (which would signal a new
-%%   paragraph.
-%% - When describing longer chunks of code that are _not_ meant for execution
-%%   (e.g., a function synopsis or list of arguments), the environment {Code}
-%%   is recommended. Alternatively, a plain {verbatim} can also be used.
-%%   (For executed code see the next section.)
 
 \section{Disaggregation modelling} \label{sec:model}
 
@@ -192,7 +148,6 @@ The latest version of \pkg{disaggregation} should always be available from the C
 
 %
 <<installrun, echo=FALSE, message=FALSE>>=
-#devtools::install_github("aknandi/disaggregation")
 library(disaggregation, quietly = TRUE)
 library(raster, quietly = TRUE)
 @
@@ -470,75 +425,6 @@ install.packages("INLA",
 
 We would like to thank the Bill and Melinda Gates Foundation for funding this research.
 
-
-%% -- Bibliography -------------------------------------------------------------
-%% - References need to be provided in a .bib BibTeX database.
-%% - All references should be made with \cite, \citet, \citep, \citealp etc.
-%%   (and never hard-coded). See the FAQ for details.
-%% - JSS-specific markup (\proglang, \pkg, \code) should be used in the .bib.
-%% - Titles in the .bib should be in title case.
-%% - DOIs should be included where available.
-
 \bibliography{refs}
-
-
-%% -- Appendix (if any) --------------------------------------------------------
-%% - After the bibliography with page break.
-%% - With proper section titles and _not_ just "Appendix".
-
-% \newpage
-% 
-% \begin{appendix}
-% 
-% \section{More technical details} \label{app:technical}
-% 
-% \begin{leftbar}
-% Appendices can be included after the bibliography (with a page break). Each
-% section within the appendix should have a proper section title (rather than
-% just \emph{Appendix}).
-% 
-% For more technical style details, please check out JSS's style FAQ at
-% \url{https://www.jstatsoft.org/pages/view/style#frequently-asked-questions}
-% which includes the following topics:
-% \begin{itemize}
-%   \item Title vs.\ sentence case.
-%   \item Graphics formatting.
-%   \item Naming conventions.
-%   \item Turning JSS manuscripts into \proglang{R} package vignettes.
-%   \item Trouble shooting.
-%   \item Many other potentially helpful details\dots
-% \end{itemize}
-% \end{leftbar}
-% 
-% 
-% \section[Using BibTeX]{Using \textsc{Bib}{\TeX}} \label{app:bibtex}
-% 
-% \begin{leftbar}
-% References need to be provided in a \textsc{Bib}{\TeX} file (\code{.bib}). All
-% references should be made with \verb|\cite|, \verb|\citet|, \verb|\citep|,
-% \verb|\citealp| etc.\ (and never hard-coded). This commands yield different
-% formats of author-year citations and allow to include additional details (e.g.,
-% pages, chapters, \dots) in brackets. In case you are not familiar with these
-% commands see the JSS style FAQ for details.
-% 
-% Cleaning up \textsc{Bib}{\TeX} files is a somewhat tedious task -- especially
-% when acquiring the entries automatically from mixed online sources. However,
-% it is important that informations are complete and presented in a consistent
-% style to avoid confusions. JSS requires the following format.
-% \begin{itemize}
-%   \item JSS-specific markup (\verb|\proglang|, \verb|\pkg|, \verb|\code|) should
-%     be used in the references.
-%   \item Titles should be in title case.
-%   \item Journal titles should not be abbreviated and in title case.
-%   \item DOIs should be included where available.
-%   \item Software should be properly cited as well. For \proglang{R} packages
-%     \code{citation("pkgname")} typically provides a good starting point.
-% \end{itemize}
-% \end{leftbar}
-% 
-% \end{appendix}
-
-%% -----------------------------------------------------------------------------
-
 
 \end{document}
