@@ -148,9 +148,15 @@ Similarly, for time-series data there are functions such as \code{td} in the \pk
 These methods are not based on a statistical model and cannot help estimate the heterogenous distribution of the disease within a polygon.
 Furthermore, these methods cannot make predictions outside of the area for which polygon data is available.
 
-The popular R package \pkg{INLA} can perform disaggregation regression in the simplest case of ...
+A number of other implementations use statistical models to estimate high resolution disease risk from aggregated disease data.
+To the best of our knowledge, these all only include covariates at the polygon level rather than at the pixel level.
+The popular R package \pkg{INLA} can perform disaggregation regression in the simplest case of a normal likelihood, an identity link function and no high resolution covariates \citep{moraga2017geostatistical, INLA, wilson2017pointless}. 
+The \pkg{SDALGCP} package fits the model using Monte Carlo Maximum Likelihood \citep{johnson2019spatially}.
+It can only fit models with a Poisson likelihood with covariates at the polygon level.
+Finally, the \pkg{lgcp} package uses a data augmentation approach to fit models to aggregated data \citep{lgcp}.  
+This Monte Carlo data augmentation approach will be very slow for large areas or large numbers of cases.
 
-li etc.
+
 
 \section{Package usage} \label{sec:code}
 
