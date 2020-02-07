@@ -143,8 +143,8 @@ The \pkg{disaggregation} package contains a C++ function that defines the model 
 
 
 The simplest method to disaggregate data from the polygon level to the high-resolution pixel level is to simply apply the value given by the polygon across all pixels within that polygon.
-This is the approach used by the \code{rasterize} function in the \pkg{raster} package, the \code{fasterize} function in the \pkg{fasterize} package and \code{st_interpolate_aw} from the \pkg{sf} package.
-Similarly, for time-series data there are functions such as \code{td} in the \pkg{tempdisagg} package.
+This is the approach used by the \code{rasterize} function in the \pkg{raster} package, the \code{fasterize} function in the \pkg{fasterize} package and \code{st_interpolate_aw} from the \pkg{sf} package \citep{raster, fasterize, sf}.
+Similarly, for time-series data there are functions such as \code{td} in the \pkg{tempdisagg} package \citep{tempdisagg}.
 These methods are not based on a statistical model and cannot help estimate the heterogenous distribution of the disease within a polygon.
 Furthermore, these methods cannot make predictions outside of the area for which polygon data is available.
 
