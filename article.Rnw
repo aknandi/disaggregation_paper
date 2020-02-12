@@ -65,7 +65,7 @@ becoming increasingly sought after in disease risk mapping~\citep{li2012log, dig
 Disaggregation regression, first applied in species distribution modelling in ecology~\citep{keil2013downscaling, barwell2014can} has now become an important method in disease risk mapping \citep{falciparum2019, vivax2019}. 
 The aggregation of response data over large heterogenous regions is problematic for making fine-scale predictions, as relationships learned between variables at one spatial scale may not hold at other scales \citep{wakefield2006health}. However, by using fine-scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the aggregated area.
 
-Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the response data. The spatial modelling software package, \pkg{INLA}~\citep{rue2009approximate}, or integrated nested Laplace approximation, has been shown to very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem except in the special case of the linear link function \citep{wilson2017pointless}. Disaggregation models can be implemented in \pkg{TMB}~\citep{tmb2016}, or template model builder, with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models at the expense of some flexibility.
+Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the response data. The spatial modelling software package, \pkg{INLA}~\citep{rue2009approximate}, or integrated nested Laplace approximation, has been shown to be very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem except in the special case of the linear link function \citep{wilson2017pointless}. Disaggregation models can be implemented in \pkg{TMB}~\citep{tmb2016}, or template model builder, with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models at the expense of some flexibility.
 
 \section{Disaggregation modelling} \label{sec:model}
 
@@ -133,11 +133,30 @@ For models that use a Gaussian likelihood, a log gamma prior is set on the log o
 
 
 
-\section{TMB implementation} \label{sec:implementation}
+\section{Implementation} \label{sec:implementation}
 
 The \pkg{disaggregation} package is built on template model builder (\pkg{TMB})~\cite{tmb2016}, which is a tool for flexibly building complex models based on C++. \pkg{TMB} combines the packages CppAD~\citep{bell2012cppad}, for automatic differentiation in C++, Eigen~\citep{guennebaud2010eigen}, a C++ library for linear algebra, and CHOLMOD~\citep{chen2008algorithm}, a package for efficient computation of sparse matrices. The use of these packages allows an efficient implementation of the automatic Laplace approximation~\citep{skaug2006automatic} with exact derivatives which gives an approximation to the Bayesian posterior. \pkg{TMB} calculates first and second order derivatives of the objective function using automatic differentiation~\citep{griewank2008evaluating}.
 
 The \pkg{disaggregation} package contains a C++ function that defines the model and computes the joint likelihood as a function of the parameters and the random effects, in the format expected by \pkg{TMB}. The \pkg{TMB} package then calculates estimates of both parameters and random effects using the Laplace approximation for the likelihood. Evaluation of the objective function and its derivatives is performed via \proglang{R}.
+
+\subsection{Other implementations}
+
+
+The simplest method to disaggregate data from the polygon level to the high-resolution pixel level is to simply apply the value given by the polygon across all pixels within that polygon.
+This is the approach used by the \code{rasterize} function in the \pkg{raster} package, the \code{fasterize} function in the \pkg{fasterize} package and \code{st_interpolate_aw} from the \pkg{sf} package \citep{raster, fasterize, sf}.
+Similarly, for time-series data there are functions such as \code{td} in the \pkg{tempdisagg} package \citep{tempdisagg}.
+These methods are not based on a statistical model and cannot help estimate the heterogenous distribution of the disease within a polygon.
+Furthermore, these methods cannot make predictions outside of the area for which polygon data is available.
+
+A number of other implementations use statistical models to estimate high resolution disease risk from aggregated disease data.
+To the best of our knowledge, these all only include covariates at the polygon level rather than at the pixel level.
+The popular R package \pkg{INLA} can perform disaggregation regression in the simplest case of a normal likelihood, an identity link function and no high resolution covariates \citep{moraga2017geostatistical, INLA, wilson2017pointless}. 
+The \pkg{SDALGCP} package fits the model using Monte Carlo Maximum Likelihood \citep{johnson2019spatially}.
+It can only fit models with a Poisson likelihood with covariates at the polygon level.
+Finally, the \pkg{lgcp} package uses a data augmentation approach to fit models to aggregated data \citep{lgcp}.  
+This Monte Carlo data augmentation approach will be very slow for large areas or large numbers of cases.
+
+
 
 \section{Package usage} \label{sec:code}
 
