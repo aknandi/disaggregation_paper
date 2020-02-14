@@ -53,7 +53,7 @@ knitr::opts_chunk$set(
   Old Road Campus\\
   University of Oxford\\
   Oxford, UK\\
-  E-mail: \email{anita.nandi@bdi.ox.ac.uk}
+  E-mail: \email{anita.k.nandi@gmail.com}
 }
 
 \begin{document}
