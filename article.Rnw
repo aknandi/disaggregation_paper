@@ -192,7 +192,7 @@ covariate_stack <- getCovariateRasters('data/covariates',
 @
 %
 
-The main functions are \code{prepare_data}, \code{fit_model} and \code{predict}.
+The main functions are \code{prepare_data}, \code{disag_model} and \code{predict}.
 
 Firstly, we use the \code{prepare_data} function to setup all the data in the format needed in the disaggregation modelling. This function performs various data manipulation tasks to create objects that are necessary for fitting the model. The required input data for the \code{prepare_data} function are a SpatialPolygonsDataFrame containing the response data and a RasterStack of covariates to be used in the model. The variable names in the SpatialPolygonsDataFrame of the response count data and the polygon ID are defined by the user.
 
@@ -227,45 +227,35 @@ summary(dis_data)
 @
 %
 
+\begin{figure}[!h]
+\centering
 %
-<<plotdata, eval=FALSE>>=
+<<plotdata, fig.width = 15, fig.height = 15>>=
 plot(dis_data)
 @
 %
+\caption{\label{fig:plotdata} Maps of Madagascar showing the data used in the disaggregation model. These plots are produced when calling the \code{plot} function on the \code{disag\_data} object. The plots show the number of malaria cases in each administrative unit (top left), maps of the four covariates used in the model (top right), and inla.mesh object that will be used to make the spatial field (bottom).}
+\end{figure}
 
-%
-<<plotdatahidden, echo=FALSE, results='hide', fig.show='hide'>>=
-data_plots <- plot(dis_data)
-@
-%
+The \code{prepare_data} function returns an object of class \code{disag_data}, which is designed to be used directly in the \code{disag_model} function.
 
-%
-<<subplotdata, fig.cap='Maps of Madagascar showing the data used in the disaggregation model. These plots are produced when calling the plot function on the disag.data object. The plots show: (a) number of malaria cases in each administrative unit, (b) maps of the four covariates used in the model; and (c) inla.mesh object that will be used to make the spatial field.', fig.subcap=c('', '', ''), out.width='0.5\\linewidth', echo=FALSE, fig.ncol = 2, dev = 'png', fig.width = 4, fig.height = 5, fig.pos = 'H'>>=
-data_plots$polygon
-data_plots$covariates
-INLA::plot.inla.mesh(dis_data$mesh, main = 'INLA mesh for spatial field')
-@
-%
-
-The \code{prepare_data} function returns an object of class \code{disag.data}, which is designed to be used directly in the \code{fit_model} function.
-
-Now we can fit the disaggregation model using \code{fit_model}. Here we use a Poisson likelihood for the incident count data with a log link function. Options for the likelihood are Gaussian, Poisson and binomial, and options for the link function are logit, log and identity. The spatial field and iid effect are components of the model by default, they can be turned off using the \code{field} and \code{iid} flags. We specify all of the priors for the model in a single list. Hyperpriors for the field are given as penalised complexity priors - specify $\rho_{min}$ and $\rho_{prob}$ for the range of the field, where $P(\rho < \rho_{min}) = \rho_{prob}$, and $\sigma_{min}$ and $\sigma_{prob}$ for the variation of the field, where $P(\sigma > \sigma_{min}) = \sigma_{prob}$. Similarly, the user specifies penalised complexity priors for the iid effect.
+Now we can fit the disaggregation model using \code{disag_model}. Here we use a Poisson likelihood for the incident count data with a log link function. Options for the likelihood are Gaussian, Poisson and binomial, and options for the link function are logit, log and identity. The spatial field and iid effect are components of the model by default, they can be turned off using the \code{field} and \code{iid} flags. We specify all of the priors for the model in a single list. Hyperpriors for the field are given as penalised complexity priors - specify $\rho_{min}$ and $\rho_{prob}$ for the range of the field, where $P(\rho < \rho_{min}) = \rho_{prob}$, and $\sigma_{min}$ and $\sigma_{prob}$ for the variation of the field, where $P(\sigma > \sigma_{min}) = \sigma_{prob}$. Similarly, the user specifies penalised complexity priors for the iid effect.
 The \code{iterations} argument specifies the maximum number of iterations the model can run for to find an optimal point. In order to print more verbose output the user can set the \code{silent} argument to FALSE.
 
 %
-<<fit_model, message = FALSE>>=
-fitted_model <- fit_model(data = dis_data,
-                          iterations = 1000,
-                          family = 'poisson',
-                          link = 'log',
-                          priors = list(priormean_intercept = 0,
-                                        priorsd_intercept = 2,
-                                        priormean_slope = 0.0,
-                                        priorsd_slope = 0.4,
-                                        prior_rho_min = 3,
-                                        prior_rho_prob = 0.01,
-                                        prior_sigma_max = 1,
-                                        prior_sigma_prob = 0.01))
+<<disag_model, message = FALSE>>=
+fitted_model <- disag_model(data = dis_data,
+                            iterations = 1000,
+                            family = 'poisson',
+                            link = 'log',
+                            priors = list(priormean_intercept = 0,
+                                          priorsd_intercept = 2,
+                                          priormean_slope = 0.0,
+                                          priorsd_slope = 0.4,
+                                          prior_rho_min = 3,
+                                          prior_rho_prob = 0.01,
+                                          prior_sigma_max = 1,
+                                          prior_sigma_prob = 0.01))
 @
 %
 
@@ -284,10 +274,10 @@ summary(fitted_model)
 plot(fitted_model)
 @
 %
-\caption{\label{fig:fitmodel} Plot summarising the results of the fitted model. These plots are produced when calling the \code{plot} function on the \code{fit.result} object. The fixed effects plot (left) shows the fitted parameter values with uncertainty estimation for all the fixed effects in the model. The in-sample performance plot (right) shows the predicted incidence rate values for each polygon in the data against the observed values for that polygon in the data.}
+\caption{\label{fig:fitmodel} Plot summarising the results of the fitted model. These plots are produced when calling the \code{plot} function on the \code{disag\_model} object. The fixed effects plot (left) shows the fitted parameter values with uncertainty estimation for all the fixed effects in the model. The in-sample performance plot (right) shows the predicted incidence rate values for each polygon in the data against the observed values for that polygon in the data.}
 \end{figure}
 
-The \code{fit_model} function returns an object of class \code{fit.result}, which is designed to be used directly in the \code{predict} function.
+The \code{disag_model} function returns an object of class \code{disag_model}, which is designed to be used directly in the \code{predict} function.
 Therefore, now that we have fitted the model, we are ready to predict the malaria incidence rate across Madagascar.
 
 To predict over a different spatial extent to that used in the model, a RasterStack covering the region to make predictions over can be passed as the \code{newdata} argument. If this argument is not given, predictions are made over the covariate rasters used in the fit. If the user wants to include the iid effect from the model as a component in the prediction then the \code{predict_iid} logical flag should be set to TRUE, otherwise, the iid effect will not be predicted. 
@@ -296,42 +286,22 @@ For the uncertainty calculations, parameter values are sampled from the posterio
 
 %
 <<predict_model>>=
-model_predictions <- predict(fitted_model)
+model_prediction <- predict(fitted_model)
 @
 %
 
-The function \code{predict} returns a list of two objects: the mean predictions (of class \code{predictions}) and the uncertainty rasters (of class \code{uncertainty}). The mean predictions contain a raster of the mean prediction of the incidence rate, as well as rasters of the field, iid (if predicted) and covariate component of the linear predictor. The \code{uncertainty} object contains a RasterStack of the prediction realisations and a RasterStack of the upper and lower credible intervals. 
+The function \code{predict} returns a object of class \code{disag_prediction} containing a list of two objects: the mean predictions and the uncertainty rasters. The mean predictions contain a raster of the mean prediction of the incidence rate, as well as rasters of the field, iid (if predicted) and covariate component of the linear predictor. The uncertainty predictions contains a RasterStack of the prediction realisations and a RasterStack of the upper and lower credible intervals. 
 
-The \code{plot} function can be used on both the \code{predictions} and \code{uncertainty} objects, as shown in Figures~\ref{fig:subpredictmean} and \ref{fig:predictuncertainty} respectively.
-
-%
-<<plotpredictions, eval=FALSE>>=
-plot(model_predictions$mean_predictions)
-@
-%
-
-%
-<<hiddenplotmean, echo=FALSE, results='hide', fig.show='hide'>>=
-mean_predictions <- plot(model_predictions$mean_predictions)
-@
-%
-
-%
-<<subpredictmean, fig.cap='Maps of Madagascar showing the fine-scale predictions from the disaggregation model. These maps are produced when calling the plot function on the predictions object. The maps show the (a) mean prediction of malaria incidence rate, (b) covariate contribution to the linear predictor, and (c) field contribution to the linear predictor.', fig.subcap=c('', '', ''), out.width='0.33\\linewidth', echo=FALSE, dev = 'png', fig.width = 4, fig.height = 6, fig.pos = 'H'>>=
-mean_predictions$mean
-mean_predictions$covariates
-mean_predictions$field
-@
-%
+The \code{plot} function can be used on the \code{disag_prediction} objects, as shown in Figure \ref{fig:plotprediction}.
 
 \begin{figure}
 \centering
 %
-<<plotuncertainty, dev = 'png', fig.width = 10, fig.height = 5>>=
-plot(model_predictions$uncertainty_predictions)
+<<plotprediction, dev = 'png', fig.width = 15, fig.height = 10>>=
+plot(model_prediction)
 @
 %
-\caption{\label{fig:predictuncertainty} Maps of Madagascar showing the fine-scale predictions of lower (2.5\%) and upper (97.5\%) credible intervals of the malaria incidence rate from the disaggregation model. These maps are produced when calling the \code{plot} function on the \code{uncertainty} object.}
+\caption{\label{fig:plotprediction} Maps of Madagascar showing the fine-scale predictions of mean, lower (2.5\%) and upper (97.5\%) credible intervals of the malaria incidence rate from the disaggregation model. These maps are produced when calling the \code{plot} function on the \code{disag\_prediction} object.}
 \end{figure}
 
 Using three simple functions within the \pkg{disaggregation} package we have been able to fit a Bayesian spatial disaggregation model and predict pixel-level incidence rate across Madagascar using aggregated incidence data and pixel-level environmental covariates.
@@ -341,24 +311,24 @@ Using three simple functions within the \pkg{disaggregation} package we have bee
 
 In this section we show performance comparisons between modelling using the Laplace approximation provided by the \pkg{disaggregation} package, based on \pkg{TMB}, and using MCMC. Given a function to evaluate the probability density of a distribution at any given point in parameter space, MCMC algorithms construct markov chains to generate samples from this distribution. These algorithms are often slow, particularly in high-dimensional settings, as it can take a long time to converge to and effectively sample from the stationary distribution. The density is evaluated at each step, so this problem is compounded when evaluating this density is computationally expensive. In contrast, the \pkg{disaggregation} package approximates using a Laplace approximation to the posterior to generate posterior samples. This only requires the posterior to be maximised to find the posterior mode and therefore involves relatively few evaluations of the posterior density compared to MCMC techniques, although potentially at the expense of less accurate posterior samples. Here we compare the time and performance of the two techniques.
 
-The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS (no-u-turn sampler) algorithm \citep{hoffman2014no} using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. In contrast, fitting the model using the Laplace approximation via \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. 
+The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS (no-u-turn sampler) algorithm \citep{hoffman2014no} using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{disag_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. In contrast, fitting the model using the Laplace approximation via \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. 
 
 %
 <<mcmc, eval=FALSE>>=
 library(tmbstan)
 
-tmb_model <- fit_model(data = dis_data, 
-                       iterations = 1,
-                       family = 'poisson', 
-                       link = 'log',
-                       priors = list(priormean_intercept = 0,
-                                     priorsd_intercept = 2,
-                                     priormean_slope = 0.0,
-                                     priorsd_slope = 0.4,
-                                     prior_rho_min = 3,
-                                     prior_rho_prob = 0.01,
-                                     prior_sigma_max = 1,
-                                     prior_sigma_prob = 0.01))
+tmb_model <- disag_model(data = dis_data, 
+                         iterations = 1,
+                         family = 'poisson', 
+                         link = 'log',
+                         priors = list(priormean_intercept = 0,
+                                       priorsd_intercept = 2,
+                                       priormean_slope = 0.0,
+                                       priorsd_slope = 0.4,
+                                       prior_rho_min = 3,
+                                       prior_rho_prob = 0.01,
+                                       prior_sigma_max = 1,
+                                       prior_sigma_prob = 0.01))
 
 # Running the MCMC algorithm for 94 hours
 start <- Sys.time()
