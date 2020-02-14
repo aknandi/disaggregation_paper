@@ -35,7 +35,7 @@ knitr::opts_chunk$set(
    \And Daniel J Weiss\\University of Oxford}
 \Plainauthor{Anita K Nandi, Tim CD Lucas, Rohan Arambepola, Peter Gething, Daniel J Weiss}
 
-\title{disaggregation: An \proglang{R} Package for Bayesian Spatial Disaggregation Modelling}
+\title{\pkg{disaggregation}: An \proglang{R} Package for Bayesian Spatial Disaggregation Modelling}
 \Plaintitle{disaggregation: An R Package for Bayesian Spatial Disaggregation Modelling}
 \Shorttitle{Disaggregation Modelling in \proglang{R}}
 
@@ -44,7 +44,7 @@ knitr::opts_chunk$set(
 }
 
 \Keywords{Bayesian spatial modelling, disaggregation modelling, TMB}
-\Plainkeywords{Bayesian spatial modelling, disaggregation modelling, TMB}
+\Plainkeywords{Bayesian spatial modelling, disaggregation modelling, \pkg{TMB}}
 
 \Address{
   Anita Nandi\\
