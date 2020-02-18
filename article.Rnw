@@ -35,16 +35,16 @@ knitr::opts_chunk$set(
    \And Daniel J Weiss\\University of Oxford}
 \Plainauthor{Anita K Nandi, Tim CD Lucas, Rohan Arambepola, Peter Gething, Daniel J Weiss}
 
-\title{disaggregation: An \proglang{R} Package for Bayesian Spatial Disaggregation Modelling}
+\title{\pkg{disaggregation}: An \proglang{R} Package for Bayesian Spatial Disaggregation Modelling}
 \Plaintitle{disaggregation: An R Package for Bayesian Spatial Disaggregation Modelling}
 \Shorttitle{Disaggregation Modelling in \proglang{R}}
 
 \Abstract{
-  Disaggregation modelling, or downscaling, has become an important discipline in epidemiology. Surveillance data, aggregated over large regions, is becoming more common, leading to an increasing demand for modelling frameworks that can deal with this data to understand spatial patterns. Disaggregation regression models use response data aggregated over large heterogenous regions to make predictions at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \emph{disaggregation}, which provides functionality to streamline the process of running a disaggregation model for fine-scale predictions.
+  Disaggregation modelling, or downscaling, has become an important discipline in epidemiology. Surveillance data, aggregated over large regions, is becoming more common, leading to an increasing demand for modelling frameworks that can deal with this data to understand spatial patterns. Disaggregation regression models use response data aggregated over large heterogenous regions to make predictions at fine-scale over the region by using fine-scale covariates to inform the heterogeneity. This paper presents the \proglang{R} package \pkg{disaggregation}, which provides functionality to streamline the process of running a disaggregation model for fine-scale predictions.
 }
 
 \Keywords{Bayesian spatial modelling, disaggregation modelling, TMB}
-\Plainkeywords{Bayesian spatial modelling, disaggregation modelling, TMB}
+\Plainkeywords{Bayesian spatial modelling, disaggregation modelling, \pkg{TMB}}
 
 \Address{
   Anita Nandi\\
@@ -53,7 +53,7 @@ knitr::opts_chunk$set(
   Old Road Campus\\
   University of Oxford\\
   Oxford, UK\\
-  E-mail: \email{anita.nandi@bdi.ox.ac.uk}
+  E-mail: \email{anita.k.nandi@gmail.com}
 }
 
 \begin{document}
@@ -65,13 +65,13 @@ becoming increasingly sought after in disease risk mapping~\citep{li2012log, dig
 Disaggregation regression, first applied in species distribution modelling in ecology~\citep{keil2013downscaling, barwell2014can} has now become an important method in disease risk mapping \citep{falciparum2019, vivax2019}. 
 The aggregation of response data over large heterogenous regions is problematic for making fine-scale predictions, as relationships learned between variables at one spatial scale may not hold at other scales \citep{wakefield2006health}. However, by using fine-scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the aggregated area.
 
-Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e. the number of rows in the covariate data is different to that of the response data. The spatial modelling software package, \pkg{INLA}~\citep{rue2009approximate}, or integrated nested Laplace approximation, has been shown to be very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem except in the special case of the linear link function \citep{wilson2017pointless}. Disaggregation models can be implemented in \pkg{TMB}~\citep{tmb2016}, or template model builder, with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models at the expense of some flexibility.
+Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e., the number of rows in the covariate data is different to that of the response data. The spatial modelling software package, \pkg{INLA}~\citep{rue2009approximate}, or integrated nested Laplace approximation, has been shown to be very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem except in the special case of the linear link function \citep{wilson2017pointless}. Disaggregation models can be implemented in \pkg{TMB}~\citep{tmb2016}, or template model builder, with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models at the expense of some flexibility.
 
 \section{Disaggregation modelling} \label{sec:model}
 
 Suppose we have response data, $y_i$, for $N$ polygons, which corresponds to count data for the property of interest within that polygon. 
 The process that is being counted occurs in continuous space that we model as a high-resolution, square lattice for convenience.
-The data, $y_i$,  are assumed to be created by the aggregation of the counts over the polygon, i.e. the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. 
+The data, $y_i$,  are assumed to be created by the aggregation of the counts over the polygon, i.e., the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. 
 The rate is defined such that the number of cases in this pixel can be calculated by multiplying the rate by the aggregation raster. For example, in epidemiology, we may have as our response the number of people that contract a certain disease in a given period of time (case incidence). Our rate would be the incidence rate of cases per population, where the aggregation raster corresponds to population. 
 
 For the disaggregation model we model the rate at pixel level, with the likelihood for the observed data given by aggregating these pixel level rates. The rate in pixel $j$ of polygon $i$ at location $s_{ij}$ is given by:
@@ -160,7 +160,7 @@ This Monte Carlo data augmentation approach will be very slow for large areas or
 
 \section{Package usage} \label{sec:code}
 
-In this section we show how to use the \pkg{disaggregation} package using a dataset of aggregated malaria case counts across Madagascar. Malaria is an infectious disease caused by parasites of the \emph{Plasmodium} group, transmitted by \emph{Anopheles} mosquitoes. Malaria transmission is therefore closely related to mosquito and parasite development. Environmental factors such as temperature, rainfall and elevation have been shown to have signifcant effect on mosquito survival and development; in general mosquitoes favour warm, humid environments with moderate rainfall. Therefore, such environmental covariates would be useful in a malaria disaggregation model to inform fine-scale distributions. In this model we use the environmental covariates of mean land surface temperature (LST), variation in LST, elevation, and enhanced vegetation index (EVI) to inform spatial heterogeneity in malaria risk. These covariates are obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS), which provides many measurements over the entire Earth's surface (\url{https://modis.gsfc.nasa.gov/data/}). 
+In this section we show how to use the \pkg{disaggregation} package using a dataset of aggregated malaria case counts across Madagascar. Malaria is an infectious disease caused by parasites of the Plasmodium group, transmitted by Anopheles mosquitoes. Malaria transmission is therefore closely related to mosquito and parasite development. Environmental factors such as temperature, rainfall and elevation have been shown to have signifcant effect on mosquito survival and development; in general mosquitoes favour warm, humid environments with moderate rainfall. Therefore, such environmental covariates would be useful in a malaria disaggregation model to inform fine-scale distributions. In this model we use the environmental covariates of mean land surface temperature (LST), variation in LST, elevation, and enhanced vegetation index (EVI) to inform spatial heterogeneity in malaria risk. These covariates are obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS), which provides many measurements over the entire Earth's surface (\url{https://modis.gsfc.nasa.gov/data/}). 
 Malaria incidence rate is often given per thousand cases and given the term annual parasite index (API).
 
 The latest version of \pkg{disaggregation} should always be available from the Comprehensive R Archive Network (CRAN) at \href{http://CRAN.R-project.org/package=disaggregation}{http://CRAN.R-project.org/package=disaggregation}. Run the following commands to install and load the package.
@@ -192,15 +192,15 @@ covariate_stack <- getCovariateRasters('data/covariates',
 @
 %
 
-The main functions are \code{prepare_data}, \code{fit_model} and \code{predict}.
+The main functions are \code{prepare_data}, \code{disag_model} and \code{predict}.
 
 Firstly, we use the \code{prepare_data} function to setup all the data in the format needed in the disaggregation modelling. This function performs various data manipulation tasks to create objects that are necessary for fitting the model. The required input data for the \code{prepare_data} function are a SpatialPolygonsDataFrame containing the response data and a RasterStack of covariates to be used in the model. The variable names in the SpatialPolygonsDataFrame of the response count data and the polygon ID are defined by the user.
 
-An optional aggregation raster can be provided. The aggregation raster defines how the pixels within each polygon are aggregated. The disaggregation model performs a weighted sum of the pixel prediction, weighted by the pixel values in the aggregation raster. In this case our pixel predictions are malaria incidence rate, so we use the population raster to aggregate pixel incidence rate by summing the number of cases (rate weighted by population). If no aggregation raster is provided a uniform distribution is assumed, i.e. the pixel predictions are aggregated to polygon level by summing the pixel values unaltered.
+An optional aggregation raster can be provided. The aggregation raster defines how the pixels within each polygon are aggregated. The disaggregation model performs a weighted sum of the pixel prediction, weighted by the pixel values in the aggregation raster. In this case our pixel predictions are malaria incidence rate, so we use the population raster to aggregate pixel incidence rate by summing the number of cases (rate weighted by population). If no aggregation raster is provided a uniform distribution is assumed, i.e., the pixel predictions are aggregated to polygon level by summing the pixel values unaltered.
 
 The values of the covariates (as well as the aggregation raster, if given) are extracted at each pixel within the polygons and stored as a data.frame with a row for each pixel and a column for each covariate (\code{parallelExtract} function). The extraction of each covariate is performed in parallel over the number of cores defined by the argument \code{ncores}. The values extracted from the aggregation raster are returned as an array of values, one for each pixel.
 
-In order to know which pixels (i.e. which rows) are contained in each polygon, a matrix is constructed that contains the start and end pixel index for each polygon (\code{getStartendindex} function). Additionally, an INLA mesh is built to use for the spatial field (\code{build_mesh} function). The \code{mesh.args} argument allows the user to supply a list of INLA mesh parameters to control the mesh used for the spatial field. The mesh can take several minutes to construct, so to prepare the data without buidling the mesh the user can set the \code{makeMesh} flag to FALSE. However, it would then not be possible to fit the disaggregation model without the mesh.
+In order to know which pixels (i.e., which rows) are contained in each polygon, a matrix is constructed that contains the start and end pixel index for each polygon (\code{getStartendindex} function). Additionally, an INLA mesh is built to use for the spatial field (\code{build_mesh} function). The \code{mesh.args} argument allows the user to supply a list of INLA mesh parameters to control the mesh used for the spatial field. The mesh can take several minutes to construct, so to prepare the data without buidling the mesh the user can set the \code{makeMesh} flag to FALSE. However, it would then not be possible to fit the disaggregation model without the mesh.
 
 If there are any NAs in the response or covariate data within the polygons the \code{prepare_data} method will return an error. This can be dealt with using the \code{na.action} flag, which is automatically off.  Ideally the NAs in the data would be dealt with by the user beforehand, however, setting na.action = TRUE will automatically deal with NAs. It removes any polygons that have NAs as a response, sets any aggregation pixels with NA to zero and sets covariate NAs pixels to the median value for that covariate across all polygons.
 
@@ -227,45 +227,35 @@ summary(dis_data)
 @
 %
 
+\begin{figure}[!h]
+\centering
 %
-<<plotdata, eval=FALSE>>=
+<<plotdata, fig.width = 15, fig.height = 15>>=
 plot(dis_data)
 @
 %
+\caption{\label{fig:plotdata} Maps of Madagascar showing the data used in the disaggregation model. These plots are produced when calling the \code{plot} function on the \code{disag\_data} object. The plots show the number of malaria cases in each administrative unit (top left), maps of the four covariates used in the model (top right), and inla.mesh object that will be used to make the spatial field (bottom).}
+\end{figure}
 
-%
-<<plotdatahidden, echo=FALSE, results='hide', fig.show='hide'>>=
-data_plots <- plot(dis_data)
-@
-%
+The \code{prepare_data} function returns an object of class \code{disag_data}, which is designed to be used directly in the \code{disag_model} function.
 
-%
-<<subplotdata, fig.cap='Maps of Madagascar showing the data used in the disaggregation model. These plots are produced when calling the plot function on the disag.data object. The plots show: (a) number of malaria cases in each administrative unit, (b) maps of the four covariates used in the model; and (c) inla.mesh object that will be used to make the spatial field.', fig.subcap=c('', '', ''), out.width='0.5\\linewidth', echo=FALSE, fig.ncol = 2, dev = 'png', fig.width = 4, fig.height = 5, fig.pos = 'H'>>=
-data_plots$polygon
-data_plots$covariates
-INLA::plot.inla.mesh(dis_data$mesh, main = 'INLA mesh for spatial field')
-@
-%
-
-The \code{prepare_data} function returns an object of class \code{disag.data}, which is designed to be used directly in the \code{fit_model} function.
-
-Now we can fit the disaggregation model using \code{fit_model}. Here we use a Poisson likelihood for the incident count data with a log link function. Options for the likelihood are Gaussian, Poisson and binomial, and options for the link function are logit, log and identity. The spatial field and iid effect are components of the model by default, they can be turned off using the \code{field} and \code{iid} flags. We specify all of the priors for the model in a single list. Hyperpriors for the field are given as penalised complexity priors - specify $\rho_{min}$ and $\rho_{prob}$ for the range of the field, where $P(\rho < \rho_{min}) = \rho_{prob}$, and $\sigma_{min}$ and $\sigma_{prob}$ for the variation of the field, where $P(\sigma > \sigma_{min}) = \sigma_{prob}$. Similarly, the user specifies penalised complexity priors for the iid effect.
+Now we can fit the disaggregation model using \code{disag_model}. Here we use a Poisson likelihood for the incident count data with a log link function. Options for the likelihood are Gaussian, Poisson and binomial, and options for the link function are logit, log and identity. The spatial field and iid effect are components of the model by default, they can be turned off using the \code{field} and \code{iid} flags. We specify all of the priors for the model in a single list. Hyperpriors for the field are given as penalised complexity priors - specify $\rho_{min}$ and $\rho_{prob}$ for the range of the field, where $P(\rho < \rho_{min}) = \rho_{prob}$, and $\sigma_{min}$ and $\sigma_{prob}$ for the variation of the field, where $P(\sigma > \sigma_{min}) = \sigma_{prob}$. Similarly, the user specifies penalised complexity priors for the iid effect.
 The \code{iterations} argument specifies the maximum number of iterations the model can run for to find an optimal point. In order to print more verbose output the user can set the \code{silent} argument to FALSE.
 
 %
-<<fit_model, message = FALSE>>=
-fitted_model <- fit_model(data = dis_data,
-                          iterations = 1000,
-                          family = 'poisson',
-                          link = 'log',
-                          priors = list(priormean_intercept = 0,
-                                        priorsd_intercept = 2,
-                                        priormean_slope = 0.0,
-                                        priorsd_slope = 0.4,
-                                        prior_rho_min = 3,
-                                        prior_rho_prob = 0.01,
-                                        prior_sigma_max = 1,
-                                        prior_sigma_prob = 0.01))
+<<disag_model, message = FALSE>>=
+fitted_model <- disag_model(data = dis_data,
+                            iterations = 1000,
+                            family = 'poisson',
+                            link = 'log',
+                            priors = list(priormean_intercept = 0,
+                                          priorsd_intercept = 2,
+                                          priormean_slope = 0.0,
+                                          priorsd_slope = 0.4,
+                                          prior_rho_min = 3,
+                                          prior_rho_prob = 0.01,
+                                          prior_sigma_max = 1,
+                                          prior_sigma_prob = 0.01))
 @
 %
 
@@ -284,54 +274,34 @@ summary(fitted_model)
 plot(fitted_model)
 @
 %
-\caption{\label{fig:fitmodel} Plot summarising the results of the fitted model. These plots are produced when calling the \code{plot} function on the \code{fit.result} object. The fixed effects plot (left) shows the fitted parameter values with uncertainty estimation for all the fixed effects in the model. The in-sample performance plot (right) shows the predicted incidence rate values for each polygon in the data against the observed values for that polygon in the data.}
+\caption{\label{fig:fitmodel} Plot summarising the results of the fitted model. These plots are produced when calling the \code{plot} function on the \code{disag\_model} object. The fixed effects plot (left) shows the fitted parameter values with uncertainty estimation for all the fixed effects in the model. The in-sample performance plot (right) shows the predicted incidence rate values for each polygon in the data against the observed values for that polygon in the data.}
 \end{figure}
 
-The \code{fit_model} function returns an object of class \code{fit.result}, which is designed to be used directly in the \code{predict} function.
+The \code{disag_model} function returns an object of class \code{disag_model}, which is designed to be used directly in the \code{predict} function.
 Therefore, now that we have fitted the model, we are ready to predict the malaria incidence rate across Madagascar.
 
 To predict over a different spatial extent to that used in the model, a RasterStack covering the region to make predictions over can be passed as the \code{newdata} argument. If this argument is not given, predictions are made over the covariate rasters used in the fit. If the user wants to include the iid effect from the model as a component in the prediction then the \code{predict_iid} logical flag should be set to TRUE, otherwise, the iid effect will not be predicted. 
 
-For the uncertainty calculations, parameter values are sampled from the posterior distribution and summarised. The number of parameter draws used to calculate the uncertainty is set by the user via the \code{N} parameter (default: 100), and the size of the credible interval (e.g. 75\%, 95\%) to be calculated when summarising is set via the argument \code{CI} (default: 0.95). 
+For the uncertainty calculations, parameter values are sampled from the posterior distribution and summarised. The number of parameter draws used to calculate the uncertainty is set by the user via the \code{N} parameter (default: 100), and the size of the credible interval (e.g., 75\%, 95\%) to be calculated when summarising is set via the argument \code{CI} (default: 0.95). 
 
 %
 <<predict_model>>=
-model_predictions <- predict(fitted_model)
+model_prediction <- predict(fitted_model)
 @
 %
 
-The function \code{predict} returns a list of two objects: the mean predictions (of class \code{predictions}) and the uncertainty rasters (of class \code{uncertainty}). The mean predictions contain a raster of the mean prediction of the incidence rate, as well as rasters of the field, iid (if predicted) and covariate component of the linear predictor. The \code{uncertainty} object contains a RasterStack of the prediction realisations and a RasterStack of the upper and lower credible intervals. 
+The function \code{predict} returns a object of class \code{disag_prediction} containing a list of two objects: the mean predictions and the uncertainty rasters. The mean predictions contain a raster of the mean prediction of the incidence rate, as well as rasters of the field, iid (if predicted) and covariate component of the linear predictor. The uncertainty predictions contains a RasterStack of the prediction realisations and a RasterStack of the upper and lower credible intervals. 
 
-The \code{plot} function can be used on both the \code{predictions} and \code{uncertainty} objects, as shown in Figures~\ref{fig:subpredictmean} and \ref{fig:predictuncertainty} respectively.
-
-%
-<<plotpredictions, eval=FALSE>>=
-plot(model_predictions$mean_predictions)
-@
-%
-
-%
-<<hiddenplotmean, echo=FALSE, results='hide', fig.show='hide'>>=
-mean_predictions <- plot(model_predictions$mean_predictions)
-@
-%
-
-%
-<<subpredictmean, fig.cap='Maps of Madagascar showing the fine-scale predictions from the disaggregation model. These maps are produced when calling the plot function on the predictions object. The maps show the (a) mean prediction of malaria incidence rate, (b) covariate contribution to the linear predictor, and (c) field contribution to the linear predictor.', fig.subcap=c('', '', ''), out.width='0.33\\linewidth', echo=FALSE, dev = 'png', fig.width = 4, fig.height = 6, fig.pos = 'H'>>=
-mean_predictions$mean
-mean_predictions$covariates
-mean_predictions$field
-@
-%
+The \code{plot} function can be used on the \code{disag_prediction} objects, as shown in Figure \ref{fig:plotprediction}.
 
 \begin{figure}
 \centering
 %
-<<plotuncertainty, dev = 'png', fig.width = 10, fig.height = 5>>=
-plot(model_predictions$uncertainty_predictions)
+<<plotprediction, dev = 'png', fig.width = 15, fig.height = 10>>=
+plot(model_prediction)
 @
 %
-\caption{\label{fig:predictuncertainty} Maps of Madagascar showing the fine-scale predictions of lower (2.5\%) and upper (97.5\%) credible intervals of the malaria incidence rate from the disaggregation model. These maps are produced when calling the \code{plot} function on the \code{uncertainty} object.}
+\caption{\label{fig:plotprediction} Maps of Madagascar showing the fine-scale predictions of mean, lower (2.5\%) and upper (97.5\%) credible intervals of the malaria incidence rate from the disaggregation model. These maps are produced when calling the \code{plot} function on the \code{disag\_prediction} object.}
 \end{figure}
 
 Using three simple functions within the \pkg{disaggregation} package we have been able to fit a Bayesian spatial disaggregation model and predict pixel-level incidence rate across Madagascar using aggregated incidence data and pixel-level environmental covariates.
@@ -341,24 +311,24 @@ Using three simple functions within the \pkg{disaggregation} package we have bee
 
 In this section we show performance comparisons between modelling using the Laplace approximation provided by the \pkg{disaggregation} package, based on \pkg{TMB}, and using MCMC. Given a function to evaluate the probability density of a distribution at any given point in parameter space, MCMC algorithms construct markov chains to generate samples from this distribution. These algorithms are often slow, particularly in high-dimensional settings, as it can take a long time to converge to and effectively sample from the stationary distribution. The density is evaluated at each step, so this problem is compounded when evaluating this density is computationally expensive. In contrast, the \pkg{disaggregation} package approximates using a Laplace approximation to the posterior to generate posterior samples. This only requires the posterior to be maximised to find the posterior mode and therefore involves relatively few evaluations of the posterior density compared to MCMC techniques, although potentially at the expense of less accurate posterior samples. Here we compare the time and performance of the two techniques.
 
-The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS (no-u-turn sampler) algorithm \citep{hoffman2014no} using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{fit_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. In contrast, fitting the model using the Laplace approximation via \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. 
+The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS (no-u-turn sampler) algorithm \citep{hoffman2014no} using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{disag_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 94 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. In contrast, fitting the model using the Laplace approximation via \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. 
 
 %
 <<mcmc, eval=FALSE>>=
 library(tmbstan)
 
-tmb_model <- fit_model(data = dis_data, 
-                       iterations = 1,
-                       family = 'poisson', 
-                       link = 'log',
-                       priors = list(priormean_intercept = 0,
-                                     priorsd_intercept = 2,
-                                     priormean_slope = 0.0,
-                                     priorsd_slope = 0.4,
-                                     prior_rho_min = 3,
-                                     prior_rho_prob = 0.01,
-                                     prior_sigma_max = 1,
-                                     prior_sigma_prob = 0.01))
+tmb_model <- disag_model(data = dis_data, 
+                         iterations = 1,
+                         family = 'poisson', 
+                         link = 'log',
+                         priors = list(priormean_intercept = 0,
+                                       priorsd_intercept = 2,
+                                       priormean_slope = 0.0,
+                                       priorsd_slope = 0.4,
+                                       prior_rho_min = 3,
+                                       prior_rho_prob = 0.01,
+                                       prior_sigma_max = 1,
+                                       prior_sigma_prob = 0.01))
 
 # Running the MCMC algorithm for 94 hours
 start <- Sys.time()
