@@ -17,14 +17,16 @@
 
 %
 <<kintroptions, echo=FALSE>>=
+knitr::knit_hooks$set(render_sweave())
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
   cache = TRUE,
   fig.width = 6,
   fig.height = 4,
-  fig.pos = 'H'
+  fig.pos = 'H',
+  prompt=TRUE
 )
+options(replace.assign=TRUE, width=90, prompt="R> ")
 @
 %
 
