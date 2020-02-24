@@ -17,14 +17,16 @@
 
 %
 <<kintroptions, echo=FALSE>>=
+knitr::knit_hooks$set(render_sweave())
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
   cache = TRUE,
   fig.width = 6,
   fig.height = 4,
-  fig.pos = 'H'
+  fig.pos = 'H',
+  prompt=TRUE
 )
+options(replace.assign=TRUE, width=90, prompt="R> ")
 @
 %
 
@@ -160,7 +162,7 @@ This Monte Carlo data augmentation approach will be very slow for large areas or
 
 \section{Package usage} \label{sec:code}
 
-In this section we show how to use the \pkg{disaggregation} package using a dataset of aggregated malaria case counts across Madagascar. Malaria is an infectious disease caused by parasites of the Plasmodium group, transmitted by Anopheles mosquitoes. Malaria transmission is therefore closely related to mosquito and parasite development. Environmental factors such as temperature, rainfall and elevation have been shown to have signifcant effect on mosquito survival and development; in general mosquitoes favour warm, humid environments with moderate rainfall. Therefore, such environmental covariates would be useful in a malaria disaggregation model to inform fine-scale distributions. In this model we use the environmental covariates of mean land surface temperature (LST), variation in LST, elevation, and enhanced vegetation index (EVI) to inform spatial heterogeneity in malaria risk. These covariates are obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS), which provides many measurements over the entire Earth's surface (\url{https://modis.gsfc.nasa.gov/data/}). 
+In this section we show how to use the \pkg{disaggregation} package using a dataset of aggregated malaria case counts across Madagascar. Malaria is an infectious disease caused by parasites of the Plasmodium group, transmitted by Anopheles mosquitoes. Malaria transmission is therefore closely related to mosquito and parasite development. Environmental factors such as temperature, rainfall and elevation have been shown to have signifcant effect on mosquito survival and development; in general mosquitoes favour warm, humid environments with moderate rainfall. Therefore, such environmental covariates would be useful in a malaria disaggregation model to inform fine-scale distributions. In this model we use the environmental covariates of mean land surface temperature (LST), elevation, and enhanced vegetation index (EVI) to inform spatial heterogeneity in malaria risk. These covariates are obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS), which provides many measurements over the entire Earth's surface (\url{https://modis.gsfc.nasa.gov/data/}). 
 Malaria incidence rate is often given per thousand cases and given the term annual parasite index (API).
 
 The latest version of \pkg{disaggregation} should always be available from the Comprehensive R Archive Network (CRAN) at \href{http://CRAN.R-project.org/package=disaggregation}{http://CRAN.R-project.org/package=disaggregation}. Run the following commands to install and load the package.
@@ -219,7 +221,7 @@ dis_data <- prepare_data(polygon_shapefile = shapes,
 @
 %
 
-We can see a summary of the data, using the generic \code{summary} function, and \code{plot} the data. The summary function returns information on how many pixels and polygons the data contains, how many pixels in the smallest and largest polygons and a summary of the covariate data. The \code{plot} functions plots a map of the polygon response data, the covariate rasters and the INLA mesh, as shown in Figure~\ref{fig:subplotdata}.
+We can see a summary of the data, using the generic \code{summary} function, and \code{plot} the data. The summary function returns information on how many pixels and polygons the data contains, how many pixels in the smallest and largest polygons and a summary of the covariate data. The \code{plot} functions plots a map of the polygon response data, the covariate rasters and the INLA mesh, as shown in Figure~\ref{fig:plotdata}.
 
 %
 <<summarydata>>=
@@ -239,7 +241,7 @@ plot(dis_data)
 
 The \code{prepare_data} function returns an object of class \code{disag_data}, which is designed to be used directly in the \code{disag_model} function.
 
-Now we can fit the disaggregation model using \code{disag_model}. Here we use a Poisson likelihood for the incident count data with a log link function. Options for the likelihood are Gaussian, Poisson and binomial, and options for the link function are logit, log and identity. The spatial field and iid effect are components of the model by default, they can be turned off using the \code{field} and \code{iid} flags. We specify all of the priors for the model in a single list. Hyperpriors for the field are given as penalised complexity priors - specify $\rho_{min}$ and $\rho_{prob}$ for the range of the field, where $P(\rho < \rho_{min}) = \rho_{prob}$, and $\sigma_{min}$ and $\sigma_{prob}$ for the variation of the field, where $P(\sigma > \sigma_{min}) = \sigma_{prob}$. Similarly, the user specifies penalised complexity priors for the iid effect.
+Now we can fit the disaggregation model using \code{disag_model}. Here we use a Poisson likelihood for the incident count data with a log link function. Options for the likelihood are Gaussian, Poisson and binomial, and options for the link function are logit, log and identity. The spatial field and iid effect are components of the model by default, they can be turned off using the \code{field} and \code{iid} flags. In this example we use the default priors. Hyperpriors for the field are implemented as penalised complexity priors - specify $\rho_{min}$ and $\rho_{prob}$ for the range of the field, where $P(\rho < \rho_{min}) = \rho_{prob}$, and $\sigma_{min}$ and $\sigma_{prob}$ for the variation of the field, where $P(\sigma > \sigma_{min}) = \sigma_{prob}$. Similarly, penalised complexity priors are implemented for the iid effect.
 The \code{iterations} argument specifies the maximum number of iterations the model can run for to find an optimal point. In order to print more verbose output the user can set the \code{silent} argument to FALSE.
 
 %
@@ -247,19 +249,11 @@ The \code{iterations} argument specifies the maximum number of iterations the mo
 fitted_model <- disag_model(data = dis_data,
                             iterations = 1000,
                             family = 'poisson',
-                            link = 'log',
-                            priors = list(priormean_intercept = 0,
-                                          priorsd_intercept = 2,
-                                          priormean_slope = 0.0,
-                                          priorsd_slope = 0.4,
-                                          prior_rho_min = 3,
-                                          prior_rho_prob = 0.01,
-                                          prior_sigma_max = 1,
-                                          prior_sigma_prob = 0.01))
+                            link = 'log')
 @
 %
 
-We can get a summary and plot of the model output. The \code{summary} function gives the estimate and standard error of the fixed effect parameters in the model, as well as the negative log likelihood and in-sample performance metrics (root mean squared error, mean absolute error, pearson correlation coefficient and spearman rank correlation coefficient). The \code{plot} function produces two plots: one of the fixed effects parameters and one of the observed data against in-sample predictions, as shown in Figure~\ref{fig:fitmodel}.
+We can get a summary and plot of the model output. The \code{summary} function gives the estimate and standard error of the fixed effect parameters in the model, as well as the negative log likelihood and in-sample performance metrics (root mean squared error, mean absolute error, pearson correlation coefficient and spearman rank correlation coefficient). The \code{plot} function produces two plots: one of the fixed effects parameters and one of the observed data against in-sample predictions, as shown in Figure~\ref{fig:plotmodel}.
 
 %
 <<summarymodel>>=
@@ -274,7 +268,7 @@ summary(fitted_model)
 plot(fitted_model)
 @
 %
-\caption{\label{fig:fitmodel} Plot summarising the results of the fitted model. These plots are produced when calling the \code{plot} function on the \code{disag\_model} object. The fixed effects plot (left) shows the fitted parameter values with uncertainty estimation for all the fixed effects in the model. The in-sample performance plot (right) shows the predicted incidence rate values for each polygon in the data against the observed values for that polygon in the data.}
+\caption{\label{fig:plotmodel} Plot summarising the results of the fitted model. These plots are produced when calling the \code{plot} function on the \code{disag\_model} object. The fixed effects plot (left) shows the fitted parameter values with uncertainty estimation for all the fixed effects in the model. The in-sample performance plot (right) shows the predicted incidence rate values for each polygon in the data against the observed values for that polygon in the data.}
 \end{figure}
 
 The \code{disag_model} function returns an object of class \code{disag_model}, which is designed to be used directly in the \code{predict} function.
@@ -317,27 +311,18 @@ The model described in Section~\ref{sec:code} for malaria in Madagascar has been
 <<mcmc, eval=FALSE>>=
 library(tmbstan)
 
-tmb_model <- disag_model(data = dis_data, 
-                         iterations = 1,
-                         family = 'poisson', 
-                         link = 'log',
-                         priors = list(priormean_intercept = 0,
-                                       priorsd_intercept = 2,
-                                       priormean_slope = 0.0,
-                                       priorsd_slope = 0.4,
-                                       prior_rho_min = 3,
-                                       prior_rho_prob = 0.01,
-                                       prior_sigma_max = 1,
-                                       prior_sigma_prob = 0.01))
+model_object <- make_model_object(data = dis_data,
+                                  family = 'poisson',
+                                  link = 'log')
 
-# Running the MCMC algorithm for 94 hours
+# Running the MCMC algorithm - takes a long time
 start <- Sys.time()
-mcmc_out <- tmbstan(tmb_model$obj, chains = 4, iter = 8000, warmup = 2000,
+mcmc_out <- tmbstan(model_object, chains = 4, iter = 8000, warmup = 2000,
                     cores = getOption('mc.cores', 4))
 end <- Sys.time()
 print(end - start)
 
-# Plot the trace of the parameter values for each sampling method
+# Plot the trace of the parameter values
 stan_trace(mcmc_out, 
            pars = c('intercept', 
                     'slope[1]', 'slope[2]', 'slope[3]', 'slope[4]', 
