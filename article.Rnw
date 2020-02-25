@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
   fig.pos = 'H',
   prompt=TRUE
 )
-options(replace.assign=TRUE, width=90, prompt="R> ")
+options(prompt="R> ")
 @
 %
 
@@ -139,7 +139,7 @@ For models that use a Gaussian likelihood, a log gamma prior is set on the log o
 
 The \pkg{disaggregation} package is built on template model builder (\pkg{TMB})~\cite{tmb2016}, which is a tool for flexibly building complex models based on C++. \pkg{TMB} combines the packages CppAD~\citep{bell2012cppad}, for automatic differentiation in C++, Eigen~\citep{guennebaud2010eigen}, a C++ library for linear algebra, and CHOLMOD~\citep{chen2008algorithm}, a package for efficient computation of sparse matrices. The use of these packages allows an efficient implementation of the automatic Laplace approximation~\citep{skaug2006automatic} with exact derivatives which gives an approximation to the Bayesian posterior. \pkg{TMB} calculates first and second order derivatives of the objective function using automatic differentiation~\citep{griewank2008evaluating}.
 
-The \pkg{disaggregation} package contains a C++ function that defines the model and computes the joint likelihood as a function of the parameters and the random effects, in the format expected by \pkg{TMB}. The \pkg{TMB} package then calculates estimates of both parameters and random effects using the Laplace approximation for the likelihood. Evaluation of the objective function and its derivatives is performed via \proglang{R}.
+The \pkg{disaggregation} package contains a C++ function that defines the model and computes the joint likelihood as a function of the parameters and the random effects, in the format expected by \pkg{TMB}. The \pkg{TMB} package then calculates estimates of both parameters and random effects using a Laplace approximation. Evaluation of the objective function and its derivatives is performed via \proglang{R}.
 
 \subsection{Other implementations}
 
