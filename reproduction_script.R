@@ -1,9 +1,20 @@
+# disaggregation: An R Package for Bayesian Spatial Disaggregation 
+# Modelling
+#
+# This replication script runs all code needed to reproduce results
+# in the paper above
+#
+# If you want to re-run the MCMC time comparison for full replicability, 
+# please set the variable (run_mcmc) below to TRUE.
+# NOTE: running the MCMC will take a long time even on high
+# performance systems.
+
+run_mcmc <- FALSE
 
 #######
 # Example predicting malaria in Madagascar
 #######
 
-devtools::install.packages("disaggregation")
 library(disaggregation)
 library(raster)
 library(tmbstan)
@@ -14,7 +25,7 @@ covariate_stack <- getCovariateRasters('data/covariates',
                                        shape = population_raster)
 
 dis_data <- prepare_data(polygon_shapefile = shapes, 
-                         covariate_rasters = covariate_stack[[1:3]], 
+                         covariate_rasters = covariate_stack, 
                          aggregation_raster = population_raster, 
                          mesh.args = list(max.edge = c(0.7, 8), 
                                           cut = 0.05, 
@@ -46,11 +57,6 @@ plot(model_prediction)
 ##########
 # Comparison with MCMC
 ##########
-
-# The MCMC takes a very long time to converge (96 hours)
-# If you want to run this set the run_mcmc flag to true
-run_mcmc <- FALSE
-
 
 if(run_mcmc) {
   
