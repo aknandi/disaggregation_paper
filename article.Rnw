@@ -67,13 +67,13 @@ becoming increasingly sought after in disease risk mapping~\citep{li2012log, dig
 Disaggregation regression, first applied in species distribution modelling in ecology~\citep{keil2013downscaling} has now become an important method in disease risk mapping \citep{falciparum2019, vivax2019}. 
 The aggregation of response data over large heterogenous regions is problematic for making fine-scale predictions, as relationships learned between variables at one spatial scale may not hold at other scales \citep{wakefield2006health}. However, by using fine-scale information from related covariates we can inform the hetrogeneity of the response variable of interest within the aggregated area.
 
-Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e., the number of rows in the covariate data is different to that of the response data. The spatial modelling software package, \pkg{INLA}~\citep{rue2009approximate}, or integrated nested Laplace approximation, has been shown to be very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem except in the special case of the linear link function \citep{wilson2017pointless}. Disaggregation models can be implemented in \pkg{TMB}~\citep{tmb2016}, or template model builder, with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models at the expense of some flexibility.
+Disaggregation modelling is unorthodox as the predictions are at a different scale to the response data, i.e., the number of rows in the covariate data is different to that of the response data. The spatial modelling software package, \pkg{INLA}~\citep{rue2009approximate}, or integrated nested Laplace approximation, has been shown to be very useful in a wide variety of circumstances, however it is not flexible enough for the unorthodox nature of the disaggregation problem except in the special case of the linear link function \citep{wilson2017pointless, moraga2017geostatistical}. Disaggregation models can be implemented in \pkg{TMB}~\citep{tmb2016}, or template model builder, with a lot of flexibility, however the data manipulation required to format the model objects and construct the model definition in C++ is non-trivial. The \pkg{disaggregation} package allows this process to be streamlined, to make it easy for the user to run disaggregation models at the expense of some flexibility.
 
 \section{Disaggregation modelling} \label{sec:model}
 
 Suppose we have response data, $y_i$, for $N$ polygons, which corresponds to count data for the property of interest within that polygon. 
 The process that is being counted occurs in continuous space that we model as a high-resolution, square lattice for convenience.
-The data, $y_i$, are assumed to be created by the aggregation of the counts over the polygon, i.e., the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. As well as the model covariates, an aggregation raster can be provided transform from the pixel level predictions (rate) to count data, from which it is trivial to calculate the corresponding polygon value by summing up the values for the individual pixels within the polygon. For example, in epidemiology, we may have as our response the number of people that contract a certain disease in a given period of time (case incidence). Our rate would be the incidence rate of cases per population, where the aggregation raster corresponds to population. Predictions of incident rate per population are made at pixel level, the population (aggregation) raster is used to convert these values to number of cases, which can then be summed to get predicted polygon level cases.
+The data, $y_i$, are assumed to be created by the aggregation of the counts over the polygon, i.e., the count data of the polygon is given by the sum of the count data for all the pixels within that polygon. An aggregation raster must be provided to transform from the pixel level predictions (rate) to count data, from which it is trivial to calculate the corresponding polygon value by summing up the values for the individual pixels within the polygon. For example, in epidemiology, we may have as our response the number of people that contract a certain disease in a given period of time (case incidence). Our rate would be the number of cases per population, where the aggregation raster corresponds to population. The case generating process is modeled at the pixel level, with these processes then aggregated to obtain the likelihood for the aggregated observed data.
 
 For the disaggregation model we model the rate at pixel level, with the likelihood for the observed data given by aggregating these pixel level rates. The rate in pixel $j$ of polygon $i$ at location $s_{ij}$ is given by:
 %
@@ -89,11 +89,11 @@ Cov(d) = \frac{\sigma^2}{\Gamma(\nu)2^{\nu - 1}}(\kappa d)^{\nu}K_{\nu}(\kappa d
 \end{equation}
 %
 
-with two hyperparameters: $\rho = \frac{\sqrt{8\nu}}{\kappa}$, the range of the field (beyond which correlation is $<$ 0.1), and $\sigma$, the marginal standard deviation, relating to the magnitude of the variation in the field. The parameter $\nu$ is the smoothness and is fixed at 2. The Matern field is at least $m$ times mean square differentiable if and only if $\nu > m$~\citep{stein1999interpolation}, therefore $\nu = 2$ is chosen as it is the smallest integer (least smooth) for the field to be differentiable. The Gamma function is given by $\Gamma(\nu) = (\nu - 1)!$ and $K_{\nu}$ is the modified Bessel function of the second kind.
+with two hyperparameters: $\rho = \frac{\sqrt{8\nu}}{\kappa}$, the range of the field (beyond which correlation is $<$ 0.1), and $\sigma$, the marginal standard deviation, relating to the magnitude of the variation in the field. The parameters $\rho$, $\sigma$ and $\nu$ are very difficult to identify together, therefore we fix $\nu$, to be able to identify $\rho$ and $\sigma$. The parameter $\nu$ is the smoothness and is fixed at 1, as it is considered the more natural basic choice for two-dimensional ($d=2$) models~\citep{INLA}. The Gamma function is given by $\Gamma(\nu) = (\nu - 1)!$ and $K_{\nu}$ is the modified Bessel function of the second kind.
 
 As we are working in a Bayesian setting, each of the model parameters and hyperparameters are given a prior, which is discussed later. 
 
-The predictions are made at pixel level, however the response data exists as count data at the polygon level. Therefore, to calculate the contribution  to the likelihood from the data we must aggregate the pixel predictions, (via the aggregation raster $a_{ij}$, to get the predicted polygon count.
+Incidence is modeled at the pixel level, and the response data exists as count data at the polygon level. Therefore, to calculate the likelihood we must aggregate the pixel rate, via the aggregation raster $a_{ij}$, to get the expected polygon count. This aggregation is defined by:
 
 %
 \begin{equation} \label{eq:agreggate1}
@@ -110,23 +110,25 @@ The different likelihoods correspond to slightly different models ($y_i$ is the 
 \begin{itemize}
 \item \textbf{Poisson}
 \begin{equation} \label{eq:poisson}
-y_i \sim \textrm{Poisson}(\textrm{cases}_i)
+y_i | \beta_0, \beta_i, \textrm{GP}, u_i \sim \textrm{Poisson}(\textrm{cases}_i)
 \end{equation}
 
 \item {\textbf{Gaussian}
 \begin{equation} \label{eq:gaussian}
-y_i \sim \textrm{Normal}(\textrm{cases}_i, \sigma_i)
+y_i | \beta_0, \beta_i, \textrm{GP}, u_i \sim \textrm{Normal}(\textrm{cases}_i, \sigma_i)
 \end{equation}
 Here $\sigma_i = \sigma \sqrt{\sum_j a_{ij}^2}$, where  $\sigma$ is the pixel-level dispersion (a parameter learnt by the model) }
 
 \item \textbf{Binomial}
 \begin{equation} \label{eq:binomial}
-y_i \sim \textrm{Binomial}(M_i, \textrm{rate}_i)
+y_i | \beta_0, \beta_i, \textrm{GP}, u_i \sim \textrm{Binomial}(M_i, \textrm{rate}_i)
 \end{equation}
 
 \end{itemize}
 %
 In the example of disease mapping, Poisson or Gaussian likelihoods could be used when the quantity observed, $y_i$, is the total number of cases in a given polygon. The binomial model could be used when $y_i$ is the prevalence of a disease in a sample of $M_i$ people in the polygon.
+
+The pixel predictions of incident rate are calculated from the fitted model parameters using Equation~\ref{eq:lp}.
 
 \subsection{Priors}
 
@@ -174,16 +176,17 @@ where
 
 This prior shrinks towards a base model of no polygon-specific effect. 
 
-For models that use a Gaussian likelihood, a log gamma prior is set on the log of the precision, $\log\tau_u \sim \log\Gamma(\text{shape} = 1, \text{rate} = 5 \times 10^{-5})$, to regularise the dispersion, $\sigma_u$, to take low values. This is chosen to be consistent with the prior set by INLA for the dispersion of the normal likelihood.
+For models that use a Gaussian likelihood, a log gamma prior is set on the log of the precision, $\log\tau_u \sim \log\Gamma(\text{shape} = 1, \text{rate} = 5 \times 10^{-5})$, to regularise the dispersion, $\sigma_u$, to take low values. This is chosen to be consistent with the prior set by INLA for the dispersion of the normal likelihood. We aim for consistency with INLA as INLA is one of the most commonly used packages for Bayesian spatial modeling and due to the parallels in computation approach such as the use of a Laplace approximation and the SPDE approximation to the Gaussian Random Field.
 
 
 \section{Implementation} \label{sec:implementation}
 
 The \pkg{disaggregation} package is built on template model builder (\pkg{TMB})~\cite{tmb2016}, which is a tool for flexibly building complex models based on C++. \pkg{TMB} combines the packages CppAD~\citep{bell2012cppad}, for automatic differentiation in C++, Eigen~\citep{guennebaud2010eigen}, a C++ library for linear algebra, and CHOLMOD~\citep{chen2008algorithm}, a package for efficient computation of sparse matrices. The use of these packages allows an efficient implementation of the automatic Laplace approximation~\citep{skaug2006automatic} with exact derivatives which gives an approximation to the Bayesian posterior. \pkg{TMB} calculates first and second order derivatives of the objective function using automatic differentiation~\citep{griewank2008evaluating}.
 
+TMB is a package which allows the user to define and fit latent variable models. The user defines the objective function (typically the likelihood or posterior density function) in C++ and TMB then implements the Laplace approximation to integrate out random effects and generates functions for evaluating the objective and gradient (via automatic differentiation). These functions can then be passed to an optimiser (for maximum likelihood estimation or to find the posterior maximum) or sampler (for MCMC) in R. \pkg{TMB} can fit both Frequentist and Bayesian models. In this case we have chosen the Bayesian approach as it is most widely used in the spatial modelling community.
+
 The \pkg{disaggregation} package contains a C++ function that defines the model and computes the joint likelihood as a function of the parameters and the random effects, in the format expected by \pkg{TMB}. The \pkg{TMB} package then calculates estimates of both parameters and random effects using a Laplace approximation. Evaluation of the objective function and its derivatives is performed via \proglang{R}.
 
-\pkg{TMB} can fit both Frequentist and Bayesian models. In this case we have chosen the Bayesian approach as it is most widely used in the spatial modelling community.
 
 \subsection{Other implementations}
 
@@ -202,18 +205,19 @@ It can only fit models with a Poisson likelihood with covariates at the polygon 
 Finally, the \pkg{lgcp} package uses a data augmentation approach to fit models to aggregated data \citep{lgcp}.  
 This Monte Carlo data augmentation approach will be very slow for large areas or large numbers of cases.
 
+In this paper we compare our method to Markov chain Monte Carlo (MCMC). MCMC methods involve constructing Markov chains which (after a sufficient warm up period) produce samples from the desired probability distribution. In high dimensional problems, these methods can be extremely slow as many steps are needed to converge to and effectively sample from the target distribution. This is particularly problematic when computing the likelihood is costly, as the likelihood is typically evaluated at each step. In spatial settings with a Gaussian field, MCMC becomes infeasible for disaggregation modelling. Our method presented in the paper leverages the Laplace approximation to provide a much faster way of fitting disaggregation models. 
 
 
 \section{Package usage} \label{sec:code}
 
-In this section we show how to use the \pkg{disaggregation} package using a dataset of aggregated malaria case counts across Madagascar in 2016. Malaria is an infectious disease caused by parasites of the Plasmodium group, transmitted by Anopheles mosquitoes. Malaria transmission is therefore closely related to mosquito and parasite development. Environmental factors such as temperature, rainfall and elevation have been shown to have signifcant effects on mosquito survival and development; in general mosquitoes favour warm, humid environments with moderate rainfall. Therefore, such environmental covariates would be useful in a malaria disaggregation model to inform fine-scale distributions. In this model we use the environmental covariates of mean land surface temperature (LST), elevation, and enhanced vegetation index (EVI) to inform spatial heterogeneity in malaria risk. These covariates are obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS), which provides many measurements over the entire Earth's surface (\url{https://modis.gsfc.nasa.gov/data/}).
+In this section we show how to use the \pkg{disaggregation} package using a dataset of aggregated malaria case counts across Madagascar in 2016. Malaria is an infectious disease caused by parasites of the Plasmodium group, transmitted by Anopheles mosquitoes. Malaria transmission is therefore closely related to mosquito and parasite development. Environmental factors such as temperature, rainfall and elevation have been shown to have signifcant effects on mosquito survival and development; in general mosquitoes favour warm, humid environments with moderate rainfall. Therefore, such environmental covariates would be useful in a malaria disaggregation model to inform fine-scale distributions. In this model we use the environmental covariates of mean land surface temperature (LST), elevation, and enhanced vegetation index (EVI), at a resolution of approximately $5\times5~km$, to inform spatial heterogeneity in malaria risk. These covariates are obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS), which provides many measurements over the entire Earth's surface (\url{https://modis.gsfc.nasa.gov/data/}).
 
 Malaria incidence rate is often given per thousand people per year given the term annual parasite index (API).
-In this case our pixel predictions correspond to malaria incidence rate, so we use population to aggregate pixel incidence rate by summing the number of cases (rate weighted by population). Raster surfaces of population for the years 2010 and 2015, were created using data from WorldPop~\citep{tatem2017worldpop} and from GPWv4~\citep{GpwNasa} where WorldPop did not have values. The population raster for 2016 was created by linear interpolation between 2010 and 2015 and extending out to 2016. This interpolation method results in a small amount of uncertainty in population raster, however this is expected to be negligible compared to the model uncertainty.
+In this case our pixel predictions correspond to malaria incidence rate, so we use population to aggregate pixel incidence rate by summing the number of cases (rate weighted by population). Raster surfaces of population for the years 2010 and 2015 at a resolution of approximately $5\times5~km$, were created using data from WorldPop~\citep{tatem2017worldpop} and from GPWv4~\citep{GpwNasa} where WorldPop did not have values. The population raster for 2016 was created by linear interpolation between 2010 and 2015 and extending out to 2016. This interpolation method results in a small amount of uncertainty in population raster, however this is expected to be negligible compared to the model uncertainty.
 
-Covariate rasters or population rasters may be accompanied by significant uncertainty. There is no established method within the \pkg{disaggregation} package to deal with this. In order to propagate this uncertainty to the predictions, users may run the model many times, varying these rasters within the known uncertainty. Both the range in predictions for different models and the model uncertainty within a model allows a quantification of the overall uncertainty of predictions.
+Covariate rasters or population rasters may be accompanied by significant uncertainty. There is no robust way within the package to propagate this uncertainty. However, if the user were able to sample from the covariate rasters and run many instances of the model, they could estimate an overall uncertainty. Whether this is a good approximation of the true uncertainty will depend on the specific use case.
 
-The covariate rasters and aggregation raster provided must be of the same spatial scale and must be spatially aligned. For this example the rasters used are at a resolution of approximately $5\times5~km$ across Madagascar. For spatially misaligned rasters, there are packages in \prolang{R} to align rasters such as \code{align_rasters} in the \pkg{gdalUtils} package~\cite{gdalutils}.
+The covariate rasters and aggregation raster provided must be of the same spatial scale and must be spatially aligned. For spatially misaligned rasters, there are packages in \prolang{R} to align rasters such as \code{align_rasters} in the \pkg{gdalUtils} package~\cite{gdalutils}.
 
 The latest version of \pkg{disaggregation} should always be available from the Comprehensive R Archive Network (CRAN) at \href{http://CRAN.R-project.org/package=disaggregation}{http://CRAN.R-project.org/package=disaggregation}. Run the following commands to install and load the package.
 
@@ -231,7 +235,7 @@ library(disaggregation)
 @
 %
 
-We then read in the data to use in the \pkg{disaggregation} package. The \code{shapefile} function and \code{raster} function are contained within the \pkg{raster} package, they are functions to read spatial data and raster data respectively. These functions return objects of type SpatialPolygonsDataFrame and RasterLayer respectively. A SpatialPolygonsDataFrame is an \prolang{R} class that holds spatial data in the form of polygons with attributes, in this case the attributes are number of malaria cases within the polygon and polygon ID. A RasterLayer is an \prolang{R} class that holds a single raster. The function \code{getCovariateRasters} is a helper function contained within the \pkg{disaggregation} package. The user provides a directory name and shapefile, it finds all the raster files within that directory and creates a RasterStack with the same extend as the shapefile provided. In this example we are building a RasterStack of the covariate rasters with the same extent as the population raster. A RasterStack is a collection of RasterLayer objects with the same spatial extent and resolution.
+We then read in the data to use in the \pkg{disaggregation} package. The \code{shapefile} function and \code{raster} function are contained within the \pkg{raster} package, they are functions to read spatial data and raster data respectively. These functions return objects of type SpatialPolygonsDataFrame and RasterLayer respectively. A SpatialPolygonsDataFrame is an \prolang{R} class that holds spatial data in the form of polygons with attributes, in this case the attributes are number of malaria cases within the polygon and polygon ID. A RasterLayer is an \prolang{R} class that holds a single raster. The function \code{getCovariateRasters} is a helper function contained within the \pkg{disaggregation} package. From a user defined a directory name and shapefile, all the raster files within that directory are read and a RasterStack is created with the same extent as the shapefile provided. In this example we are building a RasterStack of the covariate rasters with the same extent as the population raster. A RasterStack is a collection of RasterLayer objects with the same spatial extent and resolution.
 
 %
 <<setuppaths, results='hide', show='hide'>>=
@@ -258,11 +262,11 @@ Firstly, we use the \code{prepare_data} function to setup all the data in the fo
 \item \code{ncores}: Number of cores to perform the parallel extraction over.
 \end{itemize}
 
-An optional aggregation raster can be provided. The aggregation raster defines how the pixels within each polygon are aggregated. The disaggregation model performs a weighted sum of the pixel predictions, weighted by the pixel values in the aggregation raster. In this case our pixel predictions are malaria incidence rate, so we use the population raster to aggregate pixel incidence rate by summing the number of cases (rate weighted by population). If no aggregation raster is provided a uniform distribution is assumed, i.e., the pixel predictions are aggregated to polygon level by summing the pixel values unaltered.
+An optional aggregation raster can be provided. The aggregation raster defines how the pixels within each polygon are aggregated. The disaggregation model performs a weighted sum of the pixel predictions, weighted by the pixel values in the aggregation raster, as shown in~Equation~\ref{eq:agreggate1}. In this case our pixel predictions are malaria incidence rate, so we use the population raster to aggregate pixel incidence rate by summing the number of cases (rate weighted by population). If no aggregation raster is provided a uniform distribution is assumed, i.e., the pixel predictions are aggregated to polygon level by summing the pixel values unaltered.
 
 The values of the covariates (as well as the aggregation raster, if given) are extracted at each pixel within the polygons and stored as a data.frame with a row for each pixel and a column for each covariate (\code{parallelExtract} function). The extraction of each covariate is performed in parallel over the number of cores defined by the argument \code{ncores}. The values extracted from the aggregation raster are returned as an array of values, one for each pixel. In order to know which pixels (i.e., which rows) are contained in each polygon, a matrix is constructed that contains the start and end pixel index for each polygon (\code{getStartendindex} function).
 
-To fit a model with a Gaussian field we approximate a Gaussian field using Gaussian Random Markov Fields (GRMF), and solve using the stochastic partial differential equation (SPDE) approach~\citep{Lindgren2011}. This reduces the complexity of the problem to a sparse precision matrix, allowing explicit computation of the GMRF representation. This approach requires building a mesh, i.e. splitting the space into finite elements, and calculating field values at the mesh nodes. If a mesh is too fine, the field values take too long to compute, however if the mesh if too coarse, the resulting field is a poor approximation and leads to mesh artifacts in the predictions. The 2D mesh for the spatial field is built using the \code{build_mesh} function, which makes use of the \pkg{INLA} function \code{inla.mesh.2d}. The user can control the parameters of the mesh, including the granularity, using the argument \code{mesh.args} in the \code{build_mesh} function. The parameters \code{max.edge}, \code{cut} and \code{offset} can be set in the \code{mesh.args} list and are defined within the \code{inla.mesh.2d} function. By providing a two values to the \code{max.edge} parameter, the mesh contains an inner region of finer mesh, and an outer coarse region. This approach allows the region of interest to have a fine a mesh as necessary without also requiring time consuming computations in the sea regions. The mesh can take several minutes to construct, so to prepare the data without building the mesh the user can set the \code{makeMesh} flag to FALSE. However, it would then not be possible to fit the disaggregation model without the mesh. 
+To fit a model with a Gaussian field we approximate a Gaussian field using Gaussian Markov Random Fields (GMRF), and solve using the stochastic partial differential equation (SPDE) approach~\citep{Lindgren2011}. This approach requires building a mesh, i.e. splitting the space into finite elements, and calculating field values at the mesh nodes. If a mesh is too fine, the field values take too long to compute, however if the mesh is too coarse, the resulting field is a poor approximation and leads to mesh artifacts in the predictions. The 2D mesh for the spatial field is built using the \code{build_mesh} function, which makes use of the \pkg{INLA} function \code{inla.mesh.2d}. The user can control the parameters of the mesh, including the granularity, using the argument \code{mesh.args} in the \code{build_mesh} function. The parameters \code{max.edge}, \code{cut} and \code{offset} that can be set in the \code{mesh.args} list are defined within the \code{inla.mesh.2d} function. By providing two values to the \code{max.edge} parameter, the mesh contains an inner region of finer mesh, and an outer coarse region. This approach allows the region of interest to have a fine as mesh as necessary without also requiring time consuming computations in the sea regions. The mesh can take several minutes to construct, so to prepare the data without building the mesh the user can set the \code{makeMesh} flag to FALSE. However, it would then not be possible to fit the disaggregation model without the mesh. 
 
 If there are any NAs in the response or covariate data within the polygons the \code{prepare_data} method will return an error. This can be dealt with using the \code{na.action} flag, which is automatically off.  Ideally the NAs in the data would be dealt with by the user beforehand, however, setting na.action = TRUE will automatically deal with NAs. It removes any polygons that have NAs as a response, sets any aggregation pixels with NA to zero and sets covariate NA pixels to the median value for that covariate across all polygons.
 
@@ -304,7 +308,7 @@ The \code{prepare_data} function returns an object of class \code{disag_data}, w
 Now we can fit the disaggregation model using \code{disag_model}. The required inputs for the \code{disag_model} function are:
 \begin{itemize}
 \item \code{data}: Object of class \code{disag_data} returned by the \code{prepare_data} function.
-\item \code{priors}: List of priors to use for the model. For any not set, the default priors will be used.
+\item \code{priors}: List of priors and hyperpriors to use for the model. For any not set, the default priors will be used.
 \item \code{iterations}: Maximum number of iterations the model can run for to find an optimal point.
 \item \code{family}: Likelihood function. Options are gaussian, poisson and binomial.
 \item \code{link}: Link function used in the model. Options are logit, log and identity. This would typically be log, identity and logit for Poisson, Normal and binomial likelihoods, respectively.
@@ -321,7 +325,7 @@ fitted_model <- disag_model(data = dis_data,
 @
 %
 
-We can get a summary and plot of the model output. The \code{summary} function gives the estimate and standard error of the fixed effect parameters in the model, as well as the negative log likelihood and in-sample performance metrics (root mean squared error, mean absolute error, pearson correlation coefficient and spearman rank correlation coefficient). The standard error is calculated using the delta method~\citep{doob1935}, via the \code{sdreport} method in the \pkg{TMB} package. The \code{plot} function produces two plots: one of the fixed effects parameters and one of the observed data against in-sample predictions, as shown in Figure~\ref{fig:plotmodel}.
+We can get a summary and plot of the model output. The \code{summary} function gives the estimate and standard error of the fixed effect parameters in the model, as well as the negative log likelihood and in-sample performance metrics (root mean squared error, mean absolute error, pearson correlation coefficient and spearman rank correlation coefficient). The standard error is calculated based on the approximate posterior from the \pkg{TMB} package. The \code{plot} function produces two plots: one of the fixed effects parameters and one of the observed data against in-sample predictions, as shown in Figure~\ref{fig:plotmodel}.
 
 %
 <<summarymodel>>=
@@ -354,7 +358,7 @@ model_prediction <- predict(fitted_model)
 
 The function \code{predict} returns a object of class \code{disag_prediction} containing a list of two objects: the mean predictions and the uncertainty rasters. The mean predictions contain a raster of the mean prediction of the incidence rate, as well as rasters of the field, iid (if predicted) and covariate component of the linear predictor. The uncertainty predictions contains a RasterStack of the prediction realisations and a RasterStack of the upper and lower credible intervals. 
 
-The \code{plot} function can be used on the \code{disag_prediction} objects, as shown in Figure \ref{fig:plotprediction}. From Figure~\ref{fig:plotdata}, it can be seen that the polygon response data does not include the islands, whereas the covariate rasters do. As can be seen in Figure~\ref{fig:plotprediction}, out-of-sample malaria predictions of these islands have been made, however these predictions do not contribute to the in-sample performance in Figure~\ref{fig:plotmodel}.
+The \code{plot} function can be used on the \code{disag_prediction} objects, as shown in Figure \ref{fig:plotprediction}. From Figure~\ref{fig:plotdata}, it can be seen that the polygon response data does not include the islands, whereas the covariate rasters do. As can be seen in Figure~\ref{fig:plotprediction}, out-of-sample malaria predictions of these islands have been made, however these predictions do not contribute to the in-sample performance in Figure~\ref{fig:plotmodel}, nor to cross validation performance. In fact, these islands are not part of Madagascar at all, they are the islands of Comoros and Mayotte.
 
 \begin{figure}
 \centering
@@ -375,7 +379,9 @@ The same technique can be used for spatio-temporal disaggregation modelling. In 
 
 In this section we show performance comparisons between modelling using the Laplace approximation provided by the \pkg{disaggregation} package, based on \pkg{TMB}, and using MCMC. Given a function to evaluate the probability density of a distribution at any given point in parameter space, MCMC algorithms construct markov chains to generate samples from this distribution. These algorithms are often slow, particularly in high-dimensional settings, as it can take a long time to converge to and effectively sample from the stationary distribution. The density is evaluated at each step, so this problem is compounded when evaluating this density is computationally expensive. In contrast, the \pkg{disaggregation} package approximates using a Laplace approximation to the posterior to generate posterior samples. This only requires the posterior to be maximised to find the posterior mode and therefore involves relatively few evaluations of the posterior density compared to MCMC techniques, although potentially at the expense of less accurate posterior samples. Here we compare the time and performance of the two techniques.
 
-The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS (no-u-turn sampler) algorithm \citep{hoffman2014no} using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{disag_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 71 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. The property $\hat{R}$ is known as the Gelman-Rubin diagnostic~\citep{Rhat}, and is commonly used to evaluate MCMC convergence across multiple chains. In contrast, fitting the model using the Laplace approximation via \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds. Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. It can be seen that the model parameters are very similar between the two methods. It is worth noting that the field parameters given in the Table are $log(\rho)$ and $log(\sigma)$. If we transform these parameters, the values given in Table~\ref{tab:mcmcresults} correspond to a difference in the range of the field from 1.9 (TMB) to 2.3 (MCMC), and a difference in the standard deviation of the field from 1.0 (TMB) and 1.06 (MCMC). Considering this along with the large accompanying uncertainties, these field parameters are very similar.
+The model described in Section~\ref{sec:code} for malaria in Madagascar has been optimised using the \pkg{disaggregation} package. Here we fit the same model by running MCMC using the \pkg{tmbstan} package, with the NUTS (no-u-turn sampler) algorithm \citep{hoffman2014no} using four chains. It is important to note that this is a useful feature of the \pkg{disaggregation} package, to be able to create the \pkg{TMB} model object (using the \code{disag_model} function with one iteration) and pass it directly to \pkg{tmbstan}. The model is fitted by running the MCMC algorithm for 8000 iterations with 2000 of those as warmup, which took 74 hours. This number of iterations was chosen by running the MCMC algorithm repeatedly, starting at 1000 iterations, doubling the number of iterations each time until the value of the MCMC convergence statistic, $\hat{R}$, dropped below 1.05 for all model parameters. The property $\hat{R}$ is known as the Gelman-Rubin diagnostic~\citep{Rhat}, and is commonly used to evaluate MCMC convergence across multiple chains. In contrast, fitting the model using the Laplace approximation via \pkg{TMB} within the \pkg{disaggregation} package took 56 seconds.
+
+Fitted parameter values for both of these methods are given in Table~\ref{tab:mcmcresults}. It can be seen that the model parameters are very similar between the two methods. It is worth noting that the field parameters given in the Table are $log(\rho)$ and $log(\sigma)$. If we transform these parameters to their natural form, the values given in Table~\ref{tab:mcmcresults} correspond to a difference in the range of the field, $\rho$, from $1.9 \pm 0.6$ (TMB) to $2.3 \pm 0.8$ (MCMC), and a difference in the standard deviation of the field, $\sigma$, from $1.00 \pm 0.17$ (TMB) and $1.07 \pm 0.21$ (MCMC). Considering these values, along with their large accompanying uncertainties, these field predictions are very similar between the two methods. In general, the Laplace approximation will perform worse when the posterior is less Gaussian; this occurs when the prior has more influence in the model, for example, when there is less data or for hierarchical parameters.
 
 %
 <<mcmc, eval=FALSE>>=
@@ -402,15 +408,15 @@ stan_trace(mcmc_out,
 \begin{table}
 \centering
 \begin{tabular}{l|ll|ll}
- & \multicolumn{2}{|c|}{MCMC (71 hours)} & \multicolumn{2}{|c}{TMB (56 seconds)} \\
+ & \multicolumn{2}{|c|}{MCMC (74 hours)} & \multicolumn{2}{|c}{TMB (56 seconds)} \\
 Parameter & Mean & SD & Mean & SD \\
 \hline
-Intercept & -3.22 & 0.33 & -3.20 & 0.27 \\
+Intercept & -3.23 & 0.31 & -3.20 & 0.27 \\
 Slope 1 & -0.47 & 0.20 & -0.47 & 0.20 \\
-Slope 2 & 0.41 & 0.22 & 0.39 & 0.22 \\
-Slope 3 & 0.21 & 0.29 & 0.21 & 0.29 \\
-$log(\tau_u)$ & 0.90 & 0.27 & 0.98 & 0.27 \\
-$log(\sigma)$ & 0.062 & 0.009 & -0.002 & 0.166 \\
+Slope 2 & 0.41 & 0.23 & 0.39 & 0.22 \\
+Slope 3 & 0.21 & 0.31 & 0.21 & 0.29 \\
+$log(\tau_u)$ & 0.92 & 0.28 & 0.98 & 0.27 \\
+$log(\sigma)$ & 0.07 & 0.20 & -0.002 & 0.166 \\
 $log(\rho)$ & 0.82 & 0.35 & 0.63 & 0.33 \\
 \end{tabular}
 \caption{Fitted model parameter values using both MCMC and using \pkg{TMB} within the \pkg{disaggregation} package.}
@@ -418,13 +424,13 @@ $log(\rho)$ & 0.82 & 0.35 & 0.63 & 0.33 \\
 \end{table}
 %
 
-The trace of the MCMC parameter values is given in Figure~\ref{fig:mcmclong}. It can be seen that the MCMC algorithm has been run for long enough to get sufficient chain mixing. The \pkg{disaggregation} package produces similar results to the MCMC algorithm. However the model fitting using the \pkg{disaggregation} package took 56 seconds in contrast to the 71 hours taken for the MCMC run. Therefore, it can be seen that the \pkg{disaggregation} package provides a quick and simple way to run disaggregation models, that can be prohibitively slow using MCMC.
+The trace of the MCMC parameter values is given in Figure~\ref{fig:mcmclong}. It can be seen that the MCMC algorithm has been run for long enough to get sufficient chain mixing. The \pkg{disaggregation} package produces similar results to the MCMC algorithm. However the model fitting using the \pkg{disaggregation} package took 56 seconds in contrast to the 74 hours taken for the MCMC run. Therefore, it can be seen that the \pkg{disaggregation} package provides a quick and simple way to run disaggregation models, that can be prohibitively slow using MCMC.
 
 %
 \begin{figure}[t!]
 \centering
 \includegraphics[width=\linewidth]{figures/mcmc_trace.pdf}
-\caption{Trace of the fixed effects parameters for MCMC using NUTS sampling, running the algorithm for 71 hours. It was run for 8000 iterations with 2000 of those as warmup.}
+\caption{Trace of the fixed effects parameters for MCMC using NUTS sampling, running the algorithm for 74 hours. It was run for 8000 iterations with 2000 of those as warmup.}
 \label{fig:mcmclong}
 \end{figure}
 %
@@ -461,6 +467,12 @@ install.packages("INLA",
                  dep=TRUE)
 @
 %
+
+
+\section*{Data availability}
+
+All data used in this paper, including the results of the MCMC algorithm, can be found here: \url{https://figshare.com/projects/disaggregation/96095}.
+
 
 \section*{Acknowledgments}
 
